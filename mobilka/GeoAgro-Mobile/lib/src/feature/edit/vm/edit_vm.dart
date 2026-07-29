@@ -2038,12 +2038,10 @@ class EditVM extends ChangeNotifier {
 
   void setInvestmentMahhalliyAmount(String value) {
     investmentMahhalliyAmount.text = value;
-    notifyListeners();
   }
 
   void setInvestmentXorijiyAmount(String value) {
     investmentXorijiyAmount.text = value;
-    notifyListeners();
   }
 
   void setIrrigationArea(String value) {
@@ -2056,47 +2054,38 @@ class EditVM extends ChangeNotifier {
 
   void setSubsidiya(String value) {
     subsidiyaYear.text = value;
-    notifyListeners();
   }
 
   void setSubsidiyaContract(String value) {
     subsidiyaContract.text = value;
-    notifyListeners();
   }
 
   void setSubsidiyaAmount(String value) {
     subsidiyaAmount.text = value;
-    notifyListeners();
   }
 
   void setTrellisTemirInstalledArea(String value) {
     trellisTemirInstalledArea.text = value;
-    notifyListeners();
   }
 
   void setTrellisTemirCount(String value) {
     trellisTemirCount.text = value;
-    notifyListeners();
   }
 
   void setTrellisBetonInstalledArea(String value) {
     trellisBetonInstalledArea.text = value;
-    notifyListeners();
   }
 
   void setTrellisBetonCount(String value) {
     trellisBetonCount.text = value;
-    notifyListeners();
   }
 
   void setReservoirQoplamaliVolume(String value) {
     reservoirsQoplamaliVolume.text = value;
-    notifyListeners();
   }
 
   void setReservoirBetonliVolume(String value) {
     reservoirsBetonliVolume.text = value;
-    notifyListeners();
   }
 
   void setCultivatedArea(String value) {
@@ -2116,7 +2105,6 @@ class EditVM extends ChangeNotifier {
 
   void setTonna(String value) {
     tonnaController.text = value;
-    notifyListeners();
   }
 
   void setFruit(FruitModel? fruit) {

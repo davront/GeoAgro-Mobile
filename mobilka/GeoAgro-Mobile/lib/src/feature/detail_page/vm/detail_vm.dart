@@ -1502,8 +1502,10 @@ class DetailVM extends ChangeNotifier {
   }
 
   void setTonna(String value) {
+    // Простое присвоение текста — controller сам обновляет TextField,
+    // notifyListeners() тут не нужен и без него не триггерит rebuild
+    // всей 1000+ строчной формы на каждый нажатый символ.
     tonnaController.text = value;
-    notifyListeners();
   }
 
   void removeDetailAt(int index) {
@@ -1641,13 +1643,10 @@ class DetailVM extends ChangeNotifier {
 
   void setTomchiSystemsCount(String value) {
     tomchiSystemsCount.text = value;
-
-    notifyListeners();
   }
 
   void setTomchiSystemsArea(String value) {
     tomchiSystemsArea.text = value;
-    notifyListeners();
   }
 
   void setUnumdorlikValue(double value) {
@@ -1657,42 +1656,34 @@ class DetailVM extends ChangeNotifier {
 
   void setSubsidiyaConract(String value) {
     subsidiyaContract.text = value;
-    notifyListeners();
   }
 
   void setSubsidiyaAmount(String value) {
     subsidiyaAmount.text = value;
-    notifyListeners();
   }
 
   void setTrellisTemirInstalledArea(String value) {
     trellisTemirInstalledArea.text = value;
-    notifyListeners();
   }
 
   void setTrellisBetonInstalledArea(String value) {
     trellisBetonInstalledArea.text = value;
-    notifyListeners();
   }
 
   void setTrellisTemirCount(String value) {
     trellisTemirCount.text = value;
-    notifyListeners();
   }
 
   void setTrellisBetonCount(String value) {
     trellisBetonCount.text = value;
-    notifyListeners();
   }
 
   void setInvestmentMahhalliyAmount(String value) {
     investmentMahhalliyAmount.text = value;
-    notifyListeners();
   }
 
   void setInvestmentXorijiyAmount(String value) {
     investmentXorijiyAmount.text = value;
-    notifyListeners();
   }
 
   void setCultivatedArea(String value) {
@@ -1702,21 +1693,17 @@ class DetailVM extends ChangeNotifier {
 
   void setSxema1(String value) {
     sxema1.text = value;
-    notifyListeners();
   }
 
   void setSxema2(String value) {
     sxema2.text = value;
-    notifyListeners();
   }
 
   void setReservoirQoplamaliVolume(String value) {
     reservoirsQoplamaliVolume.text = value;
-    notifyListeners();
   }
 
   void setReservoirsBetonliVolume(String value) {
     reservoirsBetonliVolume.text = value;
-    notifyListeners();
   }
 }
