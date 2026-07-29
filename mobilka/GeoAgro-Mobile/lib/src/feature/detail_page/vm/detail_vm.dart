@@ -309,6 +309,26 @@ class DetailVM extends ChangeNotifier {
       if (data == null) return false;
       if ((data["farmer_id"] as int?) != farmerId) return false;
 
+      // farmerId один и тот же не значит один и тот же участок — юзер
+      // может создавать несколько плантаций подряд одному фермеру.
+      // Сверяем нарисованный полигон черновика с текущим, иначе draft
+      // от прошлой (уже сохранённой или брошенной) плантации подставится
+      // в форму для совсем нового участка.
+      final draftCoords = (data["coordinates"] as List<dynamic>? ?? [])
+          .map((c) => c as Map<String, dynamic>)
+          .toList();
+      final sameArea = draftCoords.length == coordinates.length &&
+          List.generate(coordinates.length, (i) {
+            final lat = (draftCoords[i]["latitude"] as num).toDouble();
+            final lng = (draftCoords[i]["longitude"] as num).toDouble();
+            return lat == coordinates[i].latitude &&
+                lng == coordinates[i].longitude;
+          }).every((match) => match);
+      if (!sameArea) {
+        await _clearDraft();
+        return false;
+      }
+
       final controllers =
           Map<String, dynamic>.from(data["controllers"] as Map? ?? {});
       notUsableArea.text = controllers["notUsableArea"] as String? ?? "";
@@ -465,7 +485,7 @@ class DetailVM extends ChangeNotifier {
       if (isShpallerTemir) {
         mockTrellises.add(
           Trellis(
-            trellisType: 2,
+            trellisType: 1,
             trellisCount: int.tryParse(trellisTemirCount.text.trim()) ?? 0,
             trellisInstalledArea:
                 double.tryParse(trellisTemirInstalledArea.text.trim()) ?? 0.0,
@@ -475,7 +495,7 @@ class DetailVM extends ChangeNotifier {
       if (isShpallerBeton) {
         mockTrellises.add(
           Trellis(
-            trellisType: 1,
+            trellisType: 2,
             trellisCount: int.tryParse(trellisBetonCount.text.trim()) ?? 0,
             trellisInstalledArea:
                 double.tryParse(trellisBetonInstalledArea.text.trim()) ?? 0.0,
