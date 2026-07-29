@@ -14,6 +14,7 @@
         android:label="GeoAgro"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
+        android:allowBackup="false"
         android:usesCleartextTraffic="true">
         <!-- android:label="agro_employee_public" -->
         <activity
