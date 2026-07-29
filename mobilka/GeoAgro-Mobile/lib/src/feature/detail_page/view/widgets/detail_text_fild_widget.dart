@@ -18,6 +18,7 @@ class CustomTextFieldWithLabel extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final String? suffixText;
   final bool hasError;
+  final int? maxLength;
 
   const CustomTextFieldWithLabel({
     super.key,
@@ -29,6 +30,7 @@ class CustomTextFieldWithLabel extends StatelessWidget {
     this.inputFormatters,
     this.suffixText,
     this.hasError = false,
+    this.maxLength,
   });
 
   @override
@@ -51,6 +53,7 @@ class CustomTextFieldWithLabel extends StatelessWidget {
           controller: controller,
           keyboardType: keyboardType,
           inputFormatters: inputFormatters,
+          maxLength: maxLength,
           style: AppTypography.input(context).copyWith(
             fontSize: 14.sp,
             color: context.colors.textPrimary,
@@ -63,6 +66,7 @@ class CustomTextFieldWithLabel extends StatelessWidget {
               horizontal: AppSpacing.inputPaddingHorizontal,
               vertical: AppSpacing.inputPaddingVertical,
             ),
+            counterText: maxLength != null ? "" : null,
             suffixText: suffixText,
             suffixStyle: AppTypography.bodyLarge(context).copyWith(
               fontSize: 14.sp,

@@ -272,6 +272,7 @@ class DetailPageState extends ConsumerState<DetailPage>
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))
                       ],
+                      maxLength: 10,
                     ),
                     CustomTextFieldWithLabel(
                       controller: detailVm.emptyArea,
@@ -285,6 +286,7 @@ class DetailPageState extends ConsumerState<DetailPage>
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))
                       ],
+                      maxLength: 10,
                     ),
                     SizedBox(height: 16.h),
                     MainText(text: "Kontur raqamlari"),
@@ -460,7 +462,13 @@ class DetailPageState extends ConsumerState<DetailPage>
                                 onTextChanged: detailVm.setTomchiSystemsArea,
                                 hintText:
                                     "Tomchilab sug‘oruladigan yer maydoni: GA",
-                                keyboardType: TextInputType.number,
+                                keyboardType: TextInputType.numberWithOptions(
+                                    decimal: true),
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.allow(
+                                      RegExp(r'[0-9.,]'))
+                                ],
+                                maxLength: 10,
                               ),
                             ),
                             Padding(
@@ -470,6 +478,10 @@ class DetailPageState extends ConsumerState<DetailPage>
                                 onTextChanged: detailVm.setTomchiSystemsCount,
                                 hintText: "Tomchilab sug‘orish tizimlari soni",
                                 keyboardType: TextInputType.number,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly
+                                ],
+                                maxLength: 6,
                               ),
                             )
                           ],
@@ -537,7 +549,14 @@ class DetailPageState extends ConsumerState<DetailPage>
                                         detailVm.setTrellisTemirInstalledArea,
                                     hintText:
                                         "temir shpaller o'rnatilgan maydon: GA",
-                                    keyboardType: TextInputType.number,
+                                    keyboardType:
+                                        TextInputType.numberWithOptions(
+                                            decimal: true),
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.allow(
+                                          RegExp(r'[0-9.,]'))
+                                    ],
+                                    maxLength: 10,
                                   ),
                                 ),
                                 Padding(
@@ -548,6 +567,10 @@ class DetailPageState extends ConsumerState<DetailPage>
                                         detailVm.setTrellisTemirCount,
                                     hintText: "o'rnatilgan temir shpaller soni",
                                     keyboardType: TextInputType.number,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly
+                                    ],
+                                    maxLength: 6,
                                   ),
                                 ),
                               ],
@@ -571,7 +594,14 @@ class DetailPageState extends ConsumerState<DetailPage>
                                         detailVm.setTrellisBetonInstalledArea,
                                     hintText:
                                         "beton shpaller o'rnatilgan maydon: GA ",
-                                    keyboardType: TextInputType.number,
+                                    keyboardType:
+                                        TextInputType.numberWithOptions(
+                                            decimal: true),
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.allow(
+                                          RegExp(r'[0-9.,]'))
+                                    ],
+                                    maxLength: 10,
                                   ),
                                 ),
                                 Padding(
@@ -582,6 +612,10 @@ class DetailPageState extends ConsumerState<DetailPage>
                                         detailVm.setTrellisBetonCount,
                                     hintText: "o'rnatilgan beton shpaller soni",
                                     keyboardType: TextInputType.number,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly
+                                    ],
+                                    maxLength: 6,
                                   ),
                                 ),
                               ],
@@ -667,7 +701,14 @@ class DetailPageState extends ConsumerState<DetailPage>
                                                 index],
                                             onTextChanged: (_) {},
                                             hintText: "suv havzasi hajmi m³",
-                                            keyboardType: TextInputType.number,
+                                            keyboardType:
+                                                TextInputType.numberWithOptions(
+                                                    decimal: true),
+                                            inputFormatters: [
+                                              FilteringTextInputFormatter.allow(
+                                                  RegExp(r'[0-9.,]'))
+                                            ],
+                                            maxLength: 10,
                                           ),
                                         ),
                                         if (detailVm.reservoirsBetonliVolumes
@@ -726,7 +767,14 @@ class DetailPageState extends ConsumerState<DetailPage>
                                                 index],
                                             onTextChanged: (_) {},
                                             hintText: "suv havzasi hajmi m³",
-                                            keyboardType: TextInputType.number,
+                                            keyboardType:
+                                                TextInputType.numberWithOptions(
+                                                    decimal: true),
+                                            inputFormatters: [
+                                              FilteringTextInputFormatter.allow(
+                                                  RegExp(r'[0-9.,]'))
+                                            ],
+                                            maxLength: 10,
                                           ),
                                         ),
                                         if (detailVm.reservoirsQoplamaliVolumes

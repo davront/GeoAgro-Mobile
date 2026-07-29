@@ -260,6 +260,7 @@ class _EditPageState extends ConsumerState<EditPage>
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))
                       ],
+                      maxLength: 10,
                     ),
                     CustomTextFieldWithLabel(
                       controller: edit.emptyArea,
@@ -272,6 +273,7 @@ class _EditPageState extends ConsumerState<EditPage>
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))
                       ],
+                      maxLength: 10,
                     ),
                     SizedBox(height: 16.h),
                     MainText(text: "Kontur raqamlari"),
@@ -418,7 +420,13 @@ class _EditPageState extends ConsumerState<EditPage>
                                 onTextChanged: edit.setIrrigationArea,
                                 hintText:
                                     "Tomchilab sug‘oruladigan yer maydoni",
-                                keyboardType: TextInputType.number,
+                                keyboardType: TextInputType.numberWithOptions(
+                                    decimal: true),
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.allow(
+                                      RegExp(r'[0-9.,]'))
+                                ],
+                                maxLength: 10,
                               ),
                             ),
                             Padding(
@@ -428,6 +436,10 @@ class _EditPageState extends ConsumerState<EditPage>
                                 onTextChanged: edit.setIrrigationSystemsCount,
                                 hintText: "Tomchilab sug‘orish tizimlari soni",
                                 keyboardType: TextInputType.number,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly
+                                ],
+                                maxLength: 6,
                               ),
                             )
                           ],
@@ -464,7 +476,7 @@ class _EditPageState extends ConsumerState<EditPage>
                           edit.trellisTemirInstalledArea.clear();
                           edit.setTrellisTemirInstalledArea("");
                           edit.trellisTemirCount.clear();
-                          edit.setTrellisBetonCount("");
+                          edit.setTrellisTemirCount("");
                           edit.trellisBetonInstalledArea.clear();
                           edit.setTrellisBetonInstalledArea("");
                           edit.trellisBetonCount.clear();
@@ -490,16 +502,27 @@ class _EditPageState extends ConsumerState<EditPage>
                                         edit.setTrellisTemirInstalledArea,
                                     hintText:
                                         "temir shpaller o'rnatilgan maydon",
-                                    keyboardType: TextInputType.number,
+                                    keyboardType:
+                                        TextInputType.numberWithOptions(
+                                            decimal: true),
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.allow(
+                                          RegExp(r'[0-9.,]'))
+                                    ],
+                                    maxLength: 10,
                                   ),
                                 ),
                                 Padding(
                                   padding: REdgeInsets.only(top: 10),
                                   child: CustomTextFieldWithLabel(
                                     controller: edit.trellisTemirCount,
-                                    onTextChanged: edit.setTrellisBetonCount,
+                                    onTextChanged: edit.setTrellisTemirCount,
                                     hintText: "o'rnatilgan temir shpaller soni",
                                     keyboardType: TextInputType.number,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly
+                                    ],
+                                    maxLength: 6,
                                   ),
                                 ),
                               ],
@@ -521,7 +544,14 @@ class _EditPageState extends ConsumerState<EditPage>
                                         edit.setTrellisBetonInstalledArea,
                                     hintText:
                                         "beton shpaller o'rnatilgan maydon",
-                                    keyboardType: TextInputType.number,
+                                    keyboardType:
+                                        TextInputType.numberWithOptions(
+                                            decimal: true),
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.allow(
+                                          RegExp(r'[0-9.,]'))
+                                    ],
+                                    maxLength: 10,
                                   ),
                                 ),
                                 Padding(
@@ -531,6 +561,10 @@ class _EditPageState extends ConsumerState<EditPage>
                                     onTextChanged: edit.setTrellisBetonCount,
                                     hintText: "o'rnatilgan beton shpaller soni",
                                     keyboardType: TextInputType.number,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly
+                                    ],
+                                    maxLength: 6,
                                   ),
                                 ),
                               ],
@@ -610,8 +644,14 @@ class _EditPageState extends ConsumerState<EditPage>
                                                 onTextChanged: (_) {},
                                                 hintText:
                                                     "suv havzasi hajmi m³",
-                                                keyboardType:
-                                                    TextInputType.number,
+                                                keyboardType: TextInputType
+                                                    .numberWithOptions(
+                                                        decimal: true),
+                                                inputFormatters: [
+                                                  FilteringTextInputFormatter
+                                                      .allow(RegExp(r'[0-9.,]'))
+                                                ],
+                                                maxLength: 10,
                                               ),
                                             ),
                                             if (edit.reservoirsBetonliVolumes
@@ -678,8 +718,14 @@ class _EditPageState extends ConsumerState<EditPage>
                                                 onTextChanged: (_) {},
                                                 hintText:
                                                     "suv havzasi hajmi m³",
-                                                keyboardType:
-                                                    TextInputType.number,
+                                                keyboardType: TextInputType
+                                                    .numberWithOptions(
+                                                        decimal: true),
+                                                inputFormatters: [
+                                                  FilteringTextInputFormatter
+                                                      .allow(RegExp(r'[0-9.,]'))
+                                                ],
+                                                maxLength: 10,
                                               ),
                                             ),
                                             if (edit.reservoirsQoplamaliVolumes
