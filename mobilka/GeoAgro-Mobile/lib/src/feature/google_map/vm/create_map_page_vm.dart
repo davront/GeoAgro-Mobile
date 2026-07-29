@@ -33,6 +33,13 @@ class CreateMapPageVm extends ChangeNotifier {
   LatLng? currentLocation; // Foydalanuvchi turgan joy
   bool isLocationPermissionGranted = false; // Lokatsiya ruxsatlari
 
+  // Geolocator.Position.isMocked — true, agar joylashuv mock location
+  // provider (Developer Options yoki fake GPS ilova) orqali berilgan
+  // bo'lsa. GPS antifraud (limit_km tekshiruvi) faqat haqiqiy koordinata
+  // uchun ma'noga ega — mock bo'lsa, foydalanuvchi istalgan nuqtani
+  // "haqiqiy joylashuv" sifatida yubora oladi.
+  bool isMockedLocation = false;
+
   final Set<Polyline> polylines = {};
   final Set<Polygon> polygons = {};
   final Set<Marker> markers = {};
@@ -1021,6 +1028,11 @@ class CreateMapPageVm extends ChangeNotifier {
       return "Foydalanuvchi joylashuvi aniqlanmadi";
     }
 
+    if (isMockedLocation) {
+      return "Aniqlangan joylashuv soxta (mock location). Fake GPS dasturlarini "
+          "o'chiring va qayta urinib ko'ring";
+    }
+
     if (coordinates.length < 3) {
       return "Madyon to'gri kiritilmadi";
     }
@@ -1055,6 +1067,7 @@ class CreateMapPageVm extends ChangeNotifier {
         final position = await Geolocator.getCurrentPosition(
             locationSettings:
                 const LocationSettings(accuracy: LocationAccuracy.high));
+        isMockedLocation = position.isMocked;
         currentLocation = LatLng(position.latitude, position.longitude);
         centerPoint = currentLocation; // Обновляем центральную точку
         debugPrint(

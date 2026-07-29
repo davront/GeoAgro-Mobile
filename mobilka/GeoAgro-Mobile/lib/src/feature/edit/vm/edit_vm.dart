@@ -921,6 +921,9 @@ class EditVM extends ChangeNotifier {
           timeLimit: Duration(seconds: 5),
         ),
       );
+      // Mock location (Developer Options / fake GPS ilova) — soxta
+      // koordinata, limit_km tekshiruvi uni haqiqiy deb qabul qilmasin.
+      if (pos.isMocked) return null;
       return {"latitude": pos.latitude, "longitude": pos.longitude};
     } catch (e) {
       debugPrint('EditVM: user_location unavailable: $e');
