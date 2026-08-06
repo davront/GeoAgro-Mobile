@@ -12,6 +12,7 @@ import 'package:agro_employee_public/design_system/tokens/adaptive_colors.dart';
 import 'package:agro_employee_public/design_system/tokens/radii.dart';
 import 'package:agro_employee_public/design_system/tokens/spacing.dart';
 import 'package:agro_employee_public/design_system/tokens/typography.dart';
+import 'package:agro_employee_public/design_system/utils/responsive.dart';
 import 'package:agro_employee_public/src/core/routes/app_route_names.dart';
 import 'package:agro_employee_public/src/core/storage/app_storage.dart';
 import 'package:agro_employee_public/src/core/widgets/custom_app_bar_widget.dart';
@@ -27,7 +28,6 @@ import 'package:agro_employee_public/src/feature/fermers/view/pages/fermers_page
     show fermerPageVM;
 import 'package:agro_employee_public/src/feature/home/view/pages/home_page.dart'
     show homePageVM;
-import 'package:agro_employee_public/design_system/utils/responsive.dart';
 import 'package:agro_employee_public/src/feature/home/view/pages/natification_page.dart'
     show notificationsVM;
 
@@ -500,26 +500,60 @@ class _ProfileSettingsPageState extends ConsumerState<ProfileSettingsPage> {
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   Widget _buildPersonalInfoCard(AdaptiveColors colors) {
+    final rows = [
+      (
+        Icons.person_outline,
+        "F.I.Sh",
+        _userInfo?.displayName ?? "Ko'rsatilmagan"
+      ),
+      (
+        Icons.place_outlined,
+        "Viloyat",
+        _userInfo != null
+            ? (_regionNames[_userInfo!.regionId] ?? "Ko'rsatilmagan")
+            : "Ko'rsatilmagan"
+      ),
+      (
+        Icons.map_outlined,
+        "Tuman",
+        _userInfo?.districtName ?? "Ko'rsatilmagan"
+      ),
+      (
+        Icons.phone_outlined,
+        "Telefon",
+        _userInfo?.phoneNumber ?? "Ko'rsatilmagan"
+      ),
+    ];
+
+    // На телефоне — привычный вертикальный список строк. На планшете
+    // те же строки в один столбец растягивались на всю ширину почти
+    // без текста внутри — сетка 2×2 использует простор и сокращает
+    // высоту карточки вдвое.
+    if (Responsive.isCompact(context)) {
+      return _buildCard(
+        colors,
+        child: Column(
+          children: [
+            for (var i = 0; i < rows.length; i++) ...[
+              if (i > 0) _buildDivider(colors),
+              _buildInfoRow(colors, rows[i].$1, rows[i].$2, rows[i].$3),
+            ],
+          ],
+        ),
+      );
+    }
+
     return _buildCard(
       colors,
-      child: Column(
+      child: GridView.count(
+        crossAxisCount: 2,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        childAspectRatio: 4,
+        mainAxisSpacing: AppSpacing.xs,
+        crossAxisSpacing: AppSpacing.md,
         children: [
-          _buildInfoRow(colors, Icons.person_outline, "F.I.Sh",
-              _userInfo?.displayName ?? "Ko'rsatilmagan"),
-          _buildDivider(colors),
-          _buildInfoRow(
-              colors,
-              Icons.place_outlined,
-              "Viloyat",
-              _userInfo != null
-                  ? (_regionNames[_userInfo!.regionId] ?? "Ko'rsatilmagan")
-                  : "Ko'rsatilmagan"),
-          _buildDivider(colors),
-          _buildInfoRow(colors, Icons.map_outlined, "Tuman",
-              _userInfo?.districtName ?? "Ko'rsatilmagan"),
-          _buildDivider(colors),
-          _buildInfoRow(colors, Icons.phone_outlined, "Telefon",
-              _userInfo?.phoneNumber ?? "Ko'rsatilmagan"),
+          for (final row in rows) _buildInfoRow(colors, row.$1, row.$2, row.$3),
         ],
       ),
     );
