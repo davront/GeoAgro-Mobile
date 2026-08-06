@@ -258,25 +258,87 @@ class _ProfileSettingsPageState extends ConsumerState<ProfileSettingsPage> {
                       children: [
                         _buildProfileHeader(colors),
                         SizedBox(height: AppSpacing.xl.h),
-                        _buildSectionTitle("Shaxsiy ma'lumotlar", colors),
-                        SizedBox(height: AppSpacing.sm.h),
-                        _buildPersonalInfoCard(colors),
+                        if (Responsive.isCompact(context)) ...[
+                          _buildSectionTitle("Shaxsiy ma'lumotlar", colors),
+                          SizedBox(height: AppSpacing.sm.h),
+                          _buildPersonalInfoCard(colors),
+                          SizedBox(height: AppSpacing.xl.h),
+                          _buildSectionTitle("Mavzu", colors),
+                          SizedBox(height: AppSpacing.sm.h),
+                          _buildThemeCard(colors),
+                        ] else
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildSectionTitle(
+                                        "Shaxsiy ma'lumotlar", colors),
+                                    SizedBox(height: AppSpacing.sm.h),
+                                    _buildPersonalInfoCard(colors),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(width: AppSpacing.lg.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildSectionTitle("Mavzu", colors),
+                                    SizedBox(height: AppSpacing.sm.h),
+                                    _buildThemeCard(colors),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         SizedBox(height: AppSpacing.xl.h),
-                        _buildSectionTitle("Mavzu", colors),
-                        SizedBox(height: AppSpacing.sm.h),
-                        _buildThemeCard(colors),
-                        SizedBox(height: AppSpacing.xl.h),
-                        _buildSectionTitle("Ruxsatlar", colors),
-                        SizedBox(height: AppSpacing.sm.h),
-                        _buildPermissionsCard(colors),
-                        SizedBox(height: AppSpacing.xl.h),
-                        _buildSectionTitle("Qurilmalar", colors),
-                        SizedBox(height: AppSpacing.sm.h),
-                        _buildDevicesCard(colors),
-                        SizedBox(height: AppSpacing.xl.h),
-                        _buildSectionTitle("Qo'llab-quvvatlash", colors),
-                        SizedBox(height: AppSpacing.sm.h),
-                        _buildSupportCard(colors),
+                        if (Responsive.isCompact(context)) ...[
+                          _buildSectionTitle("Ruxsatlar", colors),
+                          SizedBox(height: AppSpacing.sm.h),
+                          _buildPermissionsCard(colors),
+                          SizedBox(height: AppSpacing.xl.h),
+                          _buildSectionTitle("Qurilmalar", colors),
+                          SizedBox(height: AppSpacing.sm.h),
+                          _buildDevicesCard(colors),
+                          SizedBox(height: AppSpacing.xl.h),
+                          _buildSectionTitle("Qo'llab-quvvatlash", colors),
+                          SizedBox(height: AppSpacing.sm.h),
+                          _buildSupportCard(colors),
+                        ] else
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildSectionTitle("Ruxsatlar", colors),
+                                    SizedBox(height: AppSpacing.sm.h),
+                                    _buildPermissionsCard(colors),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(width: AppSpacing.lg.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildSectionTitle("Qurilmalar", colors),
+                                    SizedBox(height: AppSpacing.sm.h),
+                                    _buildDevicesCard(colors),
+                                    SizedBox(height: AppSpacing.xl.h),
+                                    _buildSectionTitle(
+                                        "Qo'llab-quvvatlash", colors),
+                                    SizedBox(height: AppSpacing.sm.h),
+                                    _buildSupportCard(colors),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         SizedBox(height: AppSpacing.xl.h),
                       ],
                     ),
@@ -525,35 +587,18 @@ class _ProfileSettingsPageState extends ConsumerState<ProfileSettingsPage> {
       ),
     ];
 
-    // На телефоне — привычный вертикальный список строк. На планшете
-    // те же строки в один столбец растягивались на всю ширину почти
-    // без текста внутри — сетка 2×2 использует простор и сокращает
-    // высоту карточки вдвое.
-    if (Responsive.isCompact(context)) {
-      return _buildCard(
-        colors,
-        child: Column(
-          children: [
-            for (var i = 0; i < rows.length; i++) ...[
-              if (i > 0) _buildDivider(colors),
-              _buildInfoRow(colors, rows[i].$1, rows[i].$2, rows[i].$3),
-            ],
-          ],
-        ),
-      );
-    }
-
+    // Карточка теперь всегда сидит в половине ширины экрана (секция
+    // "Shaxsiy ma'lumotlar" стоит рядом с "Mavzu"), так что 2-колоночная
+    // сетка внутри неё же обрезала текст — оставляем один столбец строк
+    // на любой ширине экрана.
     return _buildCard(
       colors,
-      child: GridView.count(
-        crossAxisCount: 2,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        childAspectRatio: 4,
-        mainAxisSpacing: AppSpacing.xs,
-        crossAxisSpacing: AppSpacing.md,
+      child: Column(
         children: [
-          for (final row in rows) _buildInfoRow(colors, row.$1, row.$2, row.$3),
+          for (var i = 0; i < rows.length; i++) ...[
+            if (i > 0) _buildDivider(colors),
+            _buildInfoRow(colors, rows[i].$1, rows[i].$2, rows[i].$3),
+          ],
         ],
       ),
     );
