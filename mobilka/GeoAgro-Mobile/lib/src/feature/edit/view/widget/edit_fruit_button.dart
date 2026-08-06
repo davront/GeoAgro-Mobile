@@ -49,7 +49,14 @@ class EditFruitButton extends ConsumerWidget {
           isScrollControlled: true,
           builder: (context) {
             return FractionallySizedBox(
-                heightFactor: 0.9, child: EditFruitBottomShit(viewModelm: vm));
+              heightFactor: 0.9,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 480),
+                  child: EditFruitBottomShit(viewModelm: vm),
+                ),
+              ),
+            );
           },
         );
 

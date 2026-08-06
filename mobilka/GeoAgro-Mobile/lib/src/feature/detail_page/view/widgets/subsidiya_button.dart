@@ -43,7 +43,12 @@ class SubsidiyaButton<T> extends StatelessWidget {
               builder: (context) {
                 return FractionallySizedBox(
                   heightFactor: 0.9,
-                  child: widget,
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 480),
+                      child: widget,
+                    ),
+                  ),
                 );
               },
             );

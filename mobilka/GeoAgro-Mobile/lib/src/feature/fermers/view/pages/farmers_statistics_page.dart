@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -792,27 +793,17 @@ class _SummaryGrid extends StatelessWidget {
       ),
     ];
 
-    // На широком экране (планшет) фиксированные 2 колонки давали
-    // слишком широкие карточки относительно их фиксированной высоты
-    // (childAspectRatio не учитывал реальный простор) — контент
-    // (иконка+значение+заголовок) либо переполнял карточку, либо
-    // карточки выглядели непропорционально большими. Колонки теперь
-    // растут вместе с шириной экрана (Responsive.getGridColumns), а
-    // aspectRatio чуть увеличен на некомпактных экранах — карточка
-    // площе, ближе к пропорциям исходного 2-колоночного дизайна на
-    // телефоне вместо растягивания вширь.
+    // Fixed childAspectRatio grids overflow once real content (longer
+    // values/titles) doesn't match the guessed ratio — masonry sizes each
+    // cell by its own content instead of a fixed guess.
     final columns = Responsive.getGridColumns(context);
-    final aspectRatio = Responsive.isCompact(context) ? 1.25 : 1.6;
-    return GridView.builder(
+    return MasonryGridView.count(
       shrinkWrap: true,
       itemCount: items.length,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: columns,
-        mainAxisSpacing: AppSpacing.md,
-        crossAxisSpacing: AppSpacing.md,
-        childAspectRatio: aspectRatio,
-      ),
+      crossAxisCount: columns,
+      mainAxisSpacing: AppSpacing.md,
+      crossAxisSpacing: AppSpacing.md,
       itemBuilder: (context, index) => _SummaryCard(item: items[index]),
     );
   }

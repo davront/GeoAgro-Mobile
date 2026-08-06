@@ -51,7 +51,12 @@ class FruitButton extends ConsumerWidget {
             final detailVm = ref.read(detailVM);
             return FractionallySizedBox(
               heightFactor: 0.9,
-              child: FruitBottomShitWidget(detailVm: detailVm),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 480),
+                  child: FruitBottomShitWidget(detailVm: detailVm),
+                ),
+              ),
             );
           },
         );

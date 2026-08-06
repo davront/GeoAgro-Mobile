@@ -370,113 +370,120 @@ class _CreateMapPageState extends ConsumerState<CreateMapPage> {
       top: 24,
       left: 16,
       right: 16,
-      child: Material(
-        color: Colors.transparent,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(AppRadius.card),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.25),
-                blurRadius: 20,
-                offset: const Offset(0, 12),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(AppRadius.card),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.25),
+                    blurRadius: 20,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
               ),
-            ],
-          ),
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.sm),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          design_colors.AppColors.primary,
-                          design_colors.AppColors.primaryDark,
-                        ],
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              design_colors.AppColors.primary,
+                              design_colors.AppColors.primaryDark,
+                            ],
+                          ),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.map_outlined,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.map_outlined,
-                      color: Colors.white,
-                      size: 20,
-                    ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Text(
+                          vm.selectedPlantation!
+                                  .getDisplayFarmerName()
+                                  .trim()
+                                  .isNotEmpty
+                              ? vm.selectedPlantation!.getDisplayFarmerName()
+                              : 'Plantatsiya #${vm.selectedPlantation!.id}',
+                          style: AppTypography.headlineMedium(context)
+                              .copyWith(fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: vm.closePlantationDialog,
+                        icon: const Icon(Icons.close),
+                        splashRadius: 20,
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Text(
-                      vm.selectedPlantation!
-                              .getDisplayFarmerName()
-                              .trim()
-                              .isNotEmpty
-                          ? vm.selectedPlantation!.getDisplayFarmerName()
-                          : 'Plantatsiya #${vm.selectedPlantation!.id}',
-                      style: AppTypography.headlineMedium(context)
-                          .copyWith(fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: vm.closePlantationDialog,
-                    icon: const Icon(Icons.close),
-                    splashRadius: 20,
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Wrap(
-                spacing: AppSpacing.md,
-                runSpacing: AppSpacing.sm,
-                children: [
-                  _buildChip(
-                    context,
-                    label: 'ID',
-                    value: '${vm.selectedPlantation!.id}',
-                    icon: Icons.numbers,
-                  ),
-                  _buildChip(
-                    context,
-                    label: 'Maydon',
-                    value: vm.selectedPlantation!.getDisplayArea(),
-                    icon: Icons.landscape_outlined,
-                  ),
-                  _buildChip(
-                    context,
-                    label: 'Status',
-                    value: vm.selectedPlantation!.isChecked
-                        ? 'Tekshirilgan'
-                        : 'Tekshirilmagan',
-                    icon: vm.selectedPlantation!.isChecked
-                        ? Icons.verified_outlined
-                        : Icons.hourglass_bottom_outlined,
-                    color: vm.selectedPlantation!.isChecked
-                        ? design_colors.AppColors.success
-                        : design_colors.AppColors.warning,
-                  ),
-                  if (vm.selectedPlantation!
-                      .getDisplayKonturNumbers()
-                      .trim()
-                      .isNotEmpty)
-                    _buildChip(
-                      context,
-                      label: 'Kontur',
-                      value: vm.selectedPlantation!.getDisplayKonturNumbers(),
-                      icon: Icons.schema_outlined,
-                    ),
-                  _buildChip(
-                    context,
-                    label: 'Nuqtalar',
-                    value: '${vm.selectedPlantation!.coordinates.length} ta',
-                    icon: Icons.straighten_outlined,
+                  const SizedBox(height: AppSpacing.md),
+                  Wrap(
+                    spacing: AppSpacing.md,
+                    runSpacing: AppSpacing.sm,
+                    children: [
+                      _buildChip(
+                        context,
+                        label: 'ID',
+                        value: '${vm.selectedPlantation!.id}',
+                        icon: Icons.numbers,
+                      ),
+                      _buildChip(
+                        context,
+                        label: 'Maydon',
+                        value: vm.selectedPlantation!.getDisplayArea(),
+                        icon: Icons.landscape_outlined,
+                      ),
+                      _buildChip(
+                        context,
+                        label: 'Status',
+                        value: vm.selectedPlantation!.isChecked
+                            ? 'Tekshirilgan'
+                            : 'Tekshirilmagan',
+                        icon: vm.selectedPlantation!.isChecked
+                            ? Icons.verified_outlined
+                            : Icons.hourglass_bottom_outlined,
+                        color: vm.selectedPlantation!.isChecked
+                            ? design_colors.AppColors.success
+                            : design_colors.AppColors.warning,
+                      ),
+                      if (vm.selectedPlantation!
+                          .getDisplayKonturNumbers()
+                          .trim()
+                          .isNotEmpty)
+                        _buildChip(
+                          context,
+                          label: 'Kontur',
+                          value:
+                              vm.selectedPlantation!.getDisplayKonturNumbers(),
+                          icon: Icons.schema_outlined,
+                        ),
+                      _buildChip(
+                        context,
+                        label: 'Nuqtalar',
+                        value:
+                            '${vm.selectedPlantation!.coordinates.length} ta',
+                        icon: Icons.straighten_outlined,
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),

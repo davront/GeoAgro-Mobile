@@ -144,6 +144,8 @@ class _FarmerPlantationsPageState extends ConsumerState<FarmerPlantationsPage> {
                       fontWeight: FontWeight.w700,
                       color: design_colors.AppColors.primaryLight,
                     ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                   SizedBox(height: AppSpacing.xs),
                   Text(
