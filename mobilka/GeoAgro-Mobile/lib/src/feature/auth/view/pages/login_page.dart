@@ -154,26 +154,31 @@ class _LoginPageState extends ConsumerState<LoginPage>
                 position: _slideAnimation,
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: AppSpacing.xl,
-                      vertical: AppSpacing.xxl,
-                    ),
-                    child: Form(
-                      key: vm.formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          SizedBox(height: 20.h),
-                          _buildLogoSection(),
-                          SizedBox(height: 48.h),
-                          _buildTitleSection(),
-                          SizedBox(height: 48.h),
-                          _buildFormFields(vm, loginVmNotifier),
-                          SizedBox(height: 32.h),
-                          _buildLoginButton(vm, loginVmNotifier),
-                          SizedBox(height: 24.h),
-                        ],
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 480),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xl,
+                          vertical: AppSpacing.xxl,
+                        ),
+                        child: Form(
+                          key: vm.formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              SizedBox(height: 20.h),
+                              _buildLogoSection(),
+                              SizedBox(height: 48.h),
+                              _buildTitleSection(),
+                              SizedBox(height: 48.h),
+                              _buildFormFields(vm, loginVmNotifier),
+                              SizedBox(height: 32.h),
+                              _buildLoginButton(vm, loginVmNotifier),
+                              SizedBox(height: 24.h),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),

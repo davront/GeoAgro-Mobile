@@ -19,37 +19,40 @@ class EmptyStateWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SvgPicture.asset(
-            'assets/svg/last_transaction.svg',
-            width: 200.w,
-            height: 200.w,
-            fit: BoxFit.contain,
-          ),
-          SizedBox(height: 24.h),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: AppTypography.body(context).copyWith(
-              color: context.colors.textSecondary,
-              fontWeight: FontWeight.w600,
-              fontSize: 18.sp,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              'assets/svg/last_transaction.svg',
+              width: 200.w,
+              height: 200.w,
+              fit: BoxFit.contain,
             ),
-          ),
-          if (subMessage != null) ...[
-            SizedBox(height: 8.h),
+            SizedBox(height: 24.h),
             Text(
-              subMessage!,
+              message,
               textAlign: TextAlign.center,
-              style: AppTypography.caption(context).copyWith(
-                color: context.colors.textTertiary,
-                fontSize: 14.sp,
+              style: AppTypography.body(context).copyWith(
+                color: context.colors.textSecondary,
+                fontWeight: FontWeight.w600,
+                fontSize: 18.sp,
               ),
             ),
+            if (subMessage != null) ...[
+              SizedBox(height: 8.h),
+              Text(
+                subMessage!,
+                textAlign: TextAlign.center,
+                style: AppTypography.caption(context).copyWith(
+                  color: context.colors.textTertiary,
+                  fontSize: 14.sp,
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

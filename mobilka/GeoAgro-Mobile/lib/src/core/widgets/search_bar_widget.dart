@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -31,7 +30,7 @@ class SearchBarWidget extends StatefulWidget {
     required this.onSearchChanged,
     this.onExpansionChanged,
     this.debounceDuration = 500,
-    this.placeholder = "INN kiriting...",
+    this.placeholder = "Qidiruv...",
   });
 
   @override
@@ -121,10 +120,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget>
                       color: context.colors.textPrimary,
                       fontWeight: FontWeight.w500,
                     ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                    ],
+                    keyboardType: TextInputType.text,
                     decoration: InputDecoration(
                       hintText: widget.placeholder,
                       hintStyle: TextStyle(
