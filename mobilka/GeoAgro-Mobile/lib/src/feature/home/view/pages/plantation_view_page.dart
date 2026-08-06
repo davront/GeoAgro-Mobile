@@ -584,11 +584,21 @@ class _PlantationViewPageState extends ConsumerState<PlantationViewPage> {
               ? const Center(child: CircularProgressIndicator())
               : Center(
                   child: ConstrainedBox(
+                    // Шире общего Responsive.getMaxContentWidth: эта
+                    // страница — сплошные короткие label+value плитки
+                    // (_buildInfoGrid), которые с обычным лимитом
+                    // оставляли пустое поле по бокам на планшете вместо
+                    // того, чтобы разложить больше плиток в строку.
                     constraints: BoxConstraints(
-                      maxWidth: Responsive.getMaxContentWidth(context),
+                      maxWidth: Responsive.isCompact(context)
+                          ? Responsive.getMaxContentWidth(context)
+                          : 1400,
                     ),
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(AppSpacing.md),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: Responsive.isCompact(context) ? 16 : 8,
+                        vertical: AppSpacing.md,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -1823,21 +1833,16 @@ class _PlantationViewPageState extends ConsumerState<PlantationViewPage> {
         final spacing = AppSpacing.md;
         final availableWidth = constraints.maxWidth;
 
-        // Минимальная ширина для одного элемента (примерно 140-160px)
-        final minTileWidth = 140.0;
+        // Минимальная ширина плитки — дальше считаем, сколько таких
+        // плиток реально влезает в строку (а не только "1 или 2"), чтобы
+        // на широких экранах строка не оставалась пустой на 2/3 ширины.
+        const minTileWidth = 140.0;
+        final maxColumns = effectiveEntries.length.clamp(1, 4);
+        var columns = ((availableWidth + spacing) / (minTileWidth + spacing))
+            .floor()
+            .clamp(1, maxColumns);
 
-        // Вычисляем, помещаются ли все элементы в одну строку
-        // Если ширина каждого элемента при размещении в одну строку >= minTileWidth, используем один столбец
-        // Если нет - используем два столбца
-        final singleRowWidth = availableWidth / effectiveEntries.length;
-        final useTwoColumns =
-            singleRowWidth < minTileWidth && effectiveEntries.length > 1;
-
-        // Вычисляем ширину элемента
-        final tileWidth = useTwoColumns
-            ? (availableWidth - spacing) / 2
-            : (availableWidth - (spacing * (effectiveEntries.length - 1))) /
-                effectiveEntries.length;
+        final tileWidth = (availableWidth - spacing * (columns - 1)) / columns;
 
         return Wrap(
           spacing: spacing,
