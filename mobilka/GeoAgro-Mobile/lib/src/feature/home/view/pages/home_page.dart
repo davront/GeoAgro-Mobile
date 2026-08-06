@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 
@@ -530,17 +531,12 @@ class _HomePageState extends ConsumerState<HomePage> {
                           REdgeInsets.symmetric(horizontal: 16, vertical: 20),
                       child: Column(
                         children: [
-                          GridView.builder(
+                          MasonryGridView.count(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount:
-                                  Responsive.getGridColumns(context),
-                              mainAxisSpacing: 16,
-                              crossAxisSpacing: 16,
-                              childAspectRatio: 1.4,
-                            ),
+                            crossAxisCount: Responsive.getGridColumns(context),
+                            mainAxisSpacing: 16,
+                            crossAxisSpacing: 16,
                             itemCount: vm.plantationsList.length,
                             itemBuilder: (context, index) {
                               final plantation = vm.plantationsList[index];

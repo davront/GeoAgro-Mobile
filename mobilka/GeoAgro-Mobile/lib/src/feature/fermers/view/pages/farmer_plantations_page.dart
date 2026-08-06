@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/widgets/custom_app_bar_widget.dart';
@@ -165,30 +166,25 @@ class _FarmerPlantationsPageState extends ConsumerState<FarmerPlantationsPage> {
         if (Responsive.shouldShowSidebar(context))
           SliverPadding(
             padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            sliver: SliverGrid(
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: Responsive.getGridColumns(context),
-                mainAxisSpacing: AppSpacing.md,
-                crossAxisSpacing: AppSpacing.md,
-                childAspectRatio: 1.3,
-              ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final plantation = vm.plantations[index];
-                  return FarmerPlantationCard(
-                    plantation: plantation,
-                    onTap: () {
-                      if (plantation.id > 0) {
-                        context.go(
-                          "${AppRouteNames.home}${AppRouteNames.plantationView}",
-                          extra: plantation.id,
-                        );
-                      }
-                    },
-                  );
-                },
-                childCount: vm.plantations.length,
-              ),
+            sliver: SliverMasonryGrid.count(
+              crossAxisCount: Responsive.getGridColumns(context),
+              mainAxisSpacing: AppSpacing.md,
+              crossAxisSpacing: AppSpacing.md,
+              childCount: vm.plantations.length,
+              itemBuilder: (context, index) {
+                final plantation = vm.plantations[index];
+                return FarmerPlantationCard(
+                  plantation: plantation,
+                  onTap: () {
+                    if (plantation.id > 0) {
+                      context.go(
+                        "${AppRouteNames.home}${AppRouteNames.plantationView}",
+                        extra: plantation.id,
+                      );
+                    }
+                  },
+                );
+              },
             ),
           )
         else
