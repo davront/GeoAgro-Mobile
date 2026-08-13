@@ -1485,6 +1485,89 @@ class DetailVM extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Полный сброс формы перед началом новой плантации. `detailVM` —
+  /// autoDispose и в норме пересоздаётся между заходами на DetailPage, но
+  /// autoDispose снимается только когда ПОСЛЕДНИЙ слушатель отписался —
+  /// быстрая навигация (карта → detail → back → карта → detail для того
+  /// же фермера) может застать ещё живой инстанс с данными предыдущей
+  /// плантации. Без явного сброса они утекают во вторую плантацию того же
+  /// фермера (selectedFruit/selectedDetails/switches/контроллеры не
+  /// трогает setValue — тот выставляет только farmerId/coordinates).
+  void resetForNewPlantation(WidgetRef ref) {
+    notUsableArea.clear();
+    emptyArea.clear();
+    konturInputController.clear();
+    tomchiSystemsArea.clear();
+    tomchiSystemsCount.clear();
+    investmentMahhalliyAmount.clear();
+    investmentXorijiyAmount.clear();
+    subsidiyaContract.clear();
+    subsidiyaAmount.clear();
+    trellisTemirInstalledArea.clear();
+    trellisTemirCount.clear();
+    trellisBetonInstalledArea.clear();
+    trellisBetonCount.clear();
+    cultivatedArea.clear();
+    sxema1.clear();
+    sxema2.clear();
+    economicInefficientAreaController.clear();
+    tonnaController.clear();
+    commentsController.clear();
+
+    for (final c in reservoirsBetonliVolumes) {
+      if (c != reservoirsBetonliVolume) c.dispose();
+    }
+    reservoirsBetonliVolumes
+      ..clear()
+      ..add(reservoirsBetonliVolume..clear());
+    for (final c in reservoirsQoplamaliVolumes) {
+      if (c != reservoirsQoplamaliVolume) c.dispose();
+    }
+    reservoirsQoplamaliVolumes
+      ..clear()
+      ..add(reservoirsQoplamaliVolume..clear());
+
+    ref.read(switchTomchi.notifier).state = false;
+    ref.read(switchFenced.notifier).state = false;
+    ref.read(switchIsFertile.notifier).state = false;
+    ref.read(switchSubsidiya.notifier).state = false;
+    ref.read(switchEfficiency.notifier).state = false;
+    ref.read(switchTrellis.notifier).state = false;
+    ref.read(switchTrellisBeton.notifier).state = false;
+    ref.read(switchTrellisTemir.notifier).state = false;
+    ref.read(switchReservoir.notifier).state = false;
+    ref.read(switchReservoirsBeton.notifier).state = false;
+    ref.read(switchReservoirsQoplamali.notifier).state = false;
+    ref.read(switchInvestmentXorjiy.notifier).state = false;
+    ref.read(switchInvestmentMahhalliy.notifier).state = false;
+    ref.read(switchIqtisodiy.notifier).state = false;
+
+    unumdorlikValue = 50;
+    _selectedDate = null;
+    _selectedDate2 = null;
+    _selectedDate3 = null;
+    selectedFruit = null;
+    selectedFruitVariety = null;
+    selectedFruitRoot = null;
+    selectedDetails = [];
+    selectedFruitVerityRoot = [];
+    selectedSubsidy = [];
+    konturNumbers = [];
+    _imageFiles.clear();
+    erroredField = null;
+    errorMessage = null;
+
+    _selectedPlantationType = null;
+    _selectedBogType = null;
+    _selectedIssiqxonaType = null;
+    _selectedUzumType = null;
+    _selectedBogSubtype = null;
+    _selectedYerType = null;
+    _selectedSubsidyType = null;
+
+    notifyListeners();
+  }
+
   void setValue({
     required int id,
     required List<Coordinate> coordinate,

@@ -128,6 +128,11 @@ class DetailPageState extends ConsumerState<DetailPage>
     final vm = ref.read(detailVM);
     final polygonArea = widget.model["polygonArea"] as double?;
     debugPrint("📤 DetailPage: polygonArea from model: $polygonArea");
+    // Живой autoDispose-инстанс мог пережить прошлую плантацию (быстрая
+    // навигация карта→forma→back→forma не всегда успевает пересоздать
+    // provider) — сбрасываем форму перед заполнением новыми данными,
+    // иначе поля вроде selectedFruit/switches тянутся из прошлой записи.
+    vm.resetForNewPlantation(ref);
     vm.setValue(
         id: widget.model["farmerId"] as int,
         coordinate: widget.model["coordinates"] as List<Coordinate>,
