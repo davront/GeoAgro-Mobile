@@ -576,6 +576,16 @@ class EditVM extends ChangeNotifier {
           thousandsSeparator: '',
         );
         selectedDetails = plantationModel.fruitAreas ?? [];
+        // Бэк иногда возвращает "fruit"/"variety"/"rootstock" как имя-строку
+        // вместо id или {id,name}-объекта (напр. "fruit": "Olcha") —
+        // FruitArea.fromJson тогда не может распарсить id, оставляет null.
+        // Нетронутый юзером fruit_area с fruit==null молча выпадал из PATCH
+        // на _currentFruitAreas() (.where((e) => e.fruit != null)), из-за
+        // чего уже сохранённый фрукт пропадал при следующем сохранении,
+        // если юзер добавлял только новый и не трогал старый. Ждём резолв
+        // здесь (не unawaited) — иначе юзер может нажать "Сохранить"
+        // раньше, чем id доподставится, и получить тот же баг заново.
+        await _resolveUnresolvedFruitAreas();
         images = plantationModel.images ?? images;
         // Сохраняем оригинальный список изображений для отмены изменений
         _originalImages = List<String>.from(images);
@@ -1640,6 +1650,67 @@ class EditVM extends ChangeNotifier {
       isLoading2 = false;
       notifyListeners();
     }
+  }
+
+  /// Резолвит fruit/variety/rootstock id для fruit_areas, полученных из
+  /// GET с fruit/variety/rootstock как имя-строка (fruit==null после
+  /// FruitArea.fromJson). Ищет id по имени через справочники — без этого
+  /// такие записи отфильтровываются в _currentFruitAreas() и теряются
+  /// при следующем PATCH.
+  Future<void> _resolveUnresolvedFruitAreas() async {
+    final unresolved =
+        selectedDetails.where((d) => d.fruit == null && d.fruitName != null);
+    if (unresolved.isEmpty) return;
+
+    if (fruitList.isEmpty) {
+      final data = await _appRepositoryImpl.getFruits();
+      if (data == null) return;
+      try {
+        fruitList = fruitModelFromJson(data);
+      } catch (_) {
+        return;
+      }
+    }
+
+    for (final detail in unresolved) {
+      final fruit = fruitList
+          .where((f) => f.name == detail.fruitName)
+          .cast<FruitModel?>()
+          .firstOrNull;
+      if (fruit == null) continue;
+      detail.fruit = fruit.id;
+
+      if (detail.variety == null && detail.varietyName != null) {
+        final varietyData = await _appRepositoryImpl.getFruitsVerity(
+            verity: fruit.id.toString());
+        if (varietyData != null) {
+          try {
+            final varieties = fruitVarietyModelFromJson(varietyData);
+            final variety = varieties
+                .where((v) => v.name == detail.varietyName)
+                .cast<FruitVarietyModel?>()
+                .firstOrNull;
+            if (variety != null) detail.variety = variety.id;
+          } catch (_) {}
+        }
+      }
+
+      if (detail.rootstock == null && detail.rootstockName != null) {
+        final rootstockData = await _appRepositoryImpl.getFruitsRootstocks(
+            rootstocks: fruit.name);
+        if (rootstockData != null) {
+          try {
+            final rootstocks = fruitRootstocksModelFromJson(rootstockData);
+            final rootstock = rootstocks
+                .where((r) => r.name == detail.rootstockName)
+                .cast<FruitRootstocksModel?>()
+                .firstOrNull;
+            if (rootstock != null) detail.rootstock = rootstock.id;
+          } catch (_) {}
+        }
+      }
+    }
+    notifyListeners();
   }
 
   void resetSubsudy() {

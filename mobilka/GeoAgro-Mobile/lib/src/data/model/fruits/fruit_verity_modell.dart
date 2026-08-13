@@ -1,8 +1,19 @@
 import 'dart:convert';
 
-List<FruitVarietyModel> fruitVarietyModelFromJson(String str) =>
-    List<FruitVarietyModel>.from(
-        json.decode(str).map((x) => FruitVarietyModel.fromJson(x)));
+// Бэк отдаёт /api/common/fruits/{id}/varieties/ либо голым массивом, либо
+// пагинированным {"count":..,"results":[...]} — тот же формат, что и
+// FarmerListModel/PlantationsListModel. Раньше парсер жёстко ждал массив
+// и падал на пагинированном ответе, из-за чего "Meva navi" оставался
+// пустым для всех фруктов, хотя "Meva turi" (fruits list, не
+// пагинированный) грузился нормально.
+List<FruitVarietyModel> fruitVarietyModelFromJson(String str) {
+  final decoded = json.decode(str);
+  final list = decoded is Map<String, dynamic>
+      ? decoded['results'] as List<dynamic>? ?? const []
+      : decoded as List<dynamic>;
+  return List<FruitVarietyModel>.from(
+      list.map((x) => FruitVarietyModel.fromJson(x)));
+}
 
 String fruitVarietyModelToJson(List<FruitVarietyModel> data) =>
     json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
