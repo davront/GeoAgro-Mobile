@@ -23,7 +23,6 @@ import 'package:agro_employee_public/src/feature/google_map/vm/plantation_map_vi
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../pages/home_page.dart';
-import '../../../../core/services/biometric_service.dart';
 import '../widgets/delete_confirmation_dialog.dart';
 import 'package:agro_employee_public/design_system/utils/responsive.dart';
 
@@ -1551,14 +1550,6 @@ class _PlantationViewPageState extends ConsumerState<PlantationViewPage> {
         return DeleteConfirmationDialog(
           onConfirm: (reason) async {
             Navigator.of(dialogContext).pop();
-            if (!context.mounted) return;
-            // Подтверждение через блокировку устройства
-            final confirmed =
-                await BiometricService.instance.confirmCriticalAction(
-              context: context,
-              reason: "Plantatsiyani o'chirish uchun tasdiqlang",
-            );
-            if (!confirmed) return;
             if (!context.mounted) return;
             _deletePlantationWithReason(context, plantation.id, reason);
           },

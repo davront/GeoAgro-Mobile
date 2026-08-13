@@ -13,9 +13,6 @@ import '../../feature/home/view/pages/approved_page.dart';
 import '../../feature/home/view/pages/plantation_view_page.dart';
 import '../../feature/home/view/pages/pending_page.dart';
 import '../../feature/auth/view/pages/login_page.dart';
-import '../../feature/auth/view/pages/biometric_lock_page.dart';
-import '../../feature/auth/view/pages/pin_setup_page.dart';
-import '../../feature/auth/view/pages/pin_lock_page.dart';
 import '../../feature/fermers/view/pages/fermers_page.dart';
 // import '../../feature/home/view/pages/description_page.dart';
 import '../../feature/detail_page/view/pages/detail_page.dart';
@@ -69,16 +66,9 @@ final class RouterConfigService {
     ],
   );
 
-  /// Определяет начальный маршрут:
-  /// - Нет токена → логин
-  /// - Есть PIN → экран ввода PIN (с биометрией как опция)
-  /// - Нет PIN → домой (из home_page предложат установить PIN)
-  /// - Обратная совместимость: biometricEnabled без PIN → биометрия
+  /// Определяет начальный маршрут: нет токена → логин, иначе домой.
   static String get _initialLocation {
     if (accessToken == null) return AppRouteNames.login;
-    if (appPinSet) return AppRouteNames.pinLock;
-    // Обратная совместимость: старая биометрия без PIN
-    if (biometricEnabled) return AppRouteNames.biometricLock;
     return AppRouteNames.home;
   }
 
@@ -91,24 +81,6 @@ final class RouterConfigService {
       GoRoute(
         path: '/dev-menu',
         builder: (context, state) => const DevMenuPage(),
-      ),
-
-      // Biometric Lock
-      GoRoute(
-        path: AppRouteNames.biometricLock,
-        builder: (context, state) => const BiometricLockPage(),
-      ),
-
-      // PIN Setup
-      GoRoute(
-        path: AppRouteNames.pinSetup,
-        builder: (context, state) => const PinSetupPage(),
-      ),
-
-      // PIN Lock
-      GoRoute(
-        path: AppRouteNames.pinLock,
-        builder: (context, state) => const PinLockPage(),
       ),
 
       // Login

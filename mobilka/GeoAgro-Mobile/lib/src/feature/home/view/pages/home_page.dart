@@ -31,8 +31,6 @@ import 'package:agro_employee_public/design_system/tokens/colors.dart'
 import 'package:agro_employee_public/design_system/tokens/adaptive_colors.dart';
 import 'package:agro_employee_public/design_system/utils/responsive.dart';
 import '../../../../core/services/fcm_service.dart';
-import '../../../../core/services/pin_service.dart';
-import '../../../../core/setting/setup.dart' as app_setup;
 
 final homePageVM = ChangeNotifierProvider.autoDispose<HomePageVm>((ref) {
   return HomePageVm(AppRepositoryImpl());
@@ -63,9 +61,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     // Загружаем данные только для главной вкладки при первой загрузке
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadTabData(0); // Загружаем данные для главной вкладки
-      _checkBiometricOffer(); // Предлагаем биометрию после логина
       // FCM init (и системный запрос разрешения на уведомления) — только
-      // здесь, после успешного логина+PIN. Раньше это спрашивалось на
+      // здесь, после успешного логина. Раньше это спрашивалось на
       // cold-start приложения, до входа вообще.
       FcmService().initialize();
       // Polling уведомлений отключён — раздувал app_in_foreground метрику,
@@ -86,22 +83,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       latestVersion,
       downloadUrl: remoteController?.apkDownloadUrl ?? '',
     );
-  }
-
-  /// Проверяет, установлен ли PIN. Если нет — отправляет на обязательную установку.
-  ///
-  /// Эта проверка работает как страховка для случаев,
-  /// когда пользователь попал на home без PIN (обратная совместимость,
-  /// обновление приложения и т.д.).
-  Future<void> _checkBiometricOffer() async {
-    // Если PIN уже установлен — ничего делать не нужно
-    final hasPinSet = await PinService.instance.isPinSet();
-    if (hasPinSet) return;
-    // Если нет токена — не нужно (пользователь не авторизован)
-    if (app_setup.accessToken == null) return;
-    if (!mounted) return;
-    // PIN не установлен — отправляем на обязательную установку
-    context.go(AppRouteNames.pinSetup);
   }
 
   void refreshPlantationsList() {

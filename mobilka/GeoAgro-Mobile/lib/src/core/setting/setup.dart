@@ -10,7 +10,6 @@ import 'package:agro_employee_public/firebase_options.dart';
 import '../../data/model/fruits/fruit_model.dart';
 import '../storage/app_storage.dart';
 import '../../data/repository/app_repository_impl.dart';
-import '../services/pin_service.dart';
 import '../../../localization/app_strings.dart' show AppLocalizedMaps;
 
 String? accessToken;
@@ -18,11 +17,6 @@ bool isBloc = false;
 int districtId = 1;
 int userId = 0;
 String? username;
-bool biometricEnabled = false;
-bool shouldOfferBiometric =
-    false; // Флаг: показать предложение биометрии после логина
-AuthMethod authMethod = AuthMethod.none; // Метод аутентификации при запуске
-bool appPinSet = false; // Установлен ли in-app PIN
 List<FruitModel> fruitList = [];
 
 Future<void> setup() async {
@@ -73,11 +67,6 @@ Future<void> setup() async {
     accessToken = await AppStorage.$read(key: StorageKey.accessToken);
     isBloc = await AppStorage.$readBool(key: StorageKey.isBlocked) ?? false;
     username = await AppStorage.$read(key: StorageKey.username);
-    biometricEnabled =
-        await AppStorage.$readBool(key: StorageKey.biometricEnabled) ?? false;
-    authMethod = await PinService.instance.getAuthMethod();
-    appPinSet = await PinService.instance.isPinSet();
-    log("Loaded authMethod: ${authMethod.name}, biometricEnabled: $biometricEnabled, appPinSet: $appPinSet");
     final storedDistrict =
         await AppStorage.$readInt(key: StorageKey.districtId);
     if (storedDistrict != null && storedDistrict > 0) {
@@ -174,7 +163,7 @@ Future<void> setup() async {
 
   // FCM init (запрашивает системный permission на уведомления) больше не
   // вызывается здесь — раньше это спрашивало доступ на самом старте
-  // приложения, до логина/PIN. Теперь инициализация вызывается из
+  // приложения, до логина. Теперь инициализация вызывается из
   // home_page.dart после успешной аутентификации.
 }
 

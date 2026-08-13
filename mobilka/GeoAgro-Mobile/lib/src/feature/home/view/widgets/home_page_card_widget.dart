@@ -15,7 +15,6 @@ import '../../../../../design_system/tokens/radii.dart';
 import '../../../../../design_system/tokens/spacing.dart';
 import '../../../../../design_system/tokens/typography.dart';
 import '../../vm/home_page_vm.dart';
-import '../../../../core/services/biometric_service.dart';
 import '../pages/home_page.dart';
 import 'delete_confirmation_dialog.dart';
 
@@ -553,14 +552,6 @@ class HomePageCardWidget extends StatelessWidget {
         return DeleteConfirmationDialog(
           onConfirm: (reason) async {
             Navigator.of(dialogContext).pop();
-            if (!context.mounted) return;
-            // Подтверждение через блокировку устройства
-            final confirmed =
-                await BiometricService.instance.confirmCriticalAction(
-              context: context,
-              reason: "Plantatsiyani o'chirish uchun tasdiqlang",
-            );
-            if (!confirmed) return;
             if (!context.mounted) return;
             _deletePlantationWithReason(context, plantationId, reason);
           },

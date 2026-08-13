@@ -22,7 +22,6 @@ import 'package:agro_employee_public/src/data/repository/app_repository_impl.dar
 import 'package:agro_employee_public/src/core/widgets/app_material_context.dart'
     show themeProvider;
 import 'package:agro_employee_public/src/core/services/fcm_service.dart';
-import 'package:agro_employee_public/src/core/services/pin_service.dart';
 import 'package:agro_employee_public/src/core/setting/setup.dart' as app_setup;
 import 'package:agro_employee_public/src/feature/fermers/view/pages/fermers_page.dart'
     show fermerPageVM;
@@ -193,9 +192,6 @@ class _ProfileSettingsPageState extends ConsumerState<ProfileSettingsPage> {
               app_setup.userId = 0;
               app_setup.districtId = 1;
               app_setup.username = null;
-              app_setup.appPinSet = false;
-              app_setup.authMethod = AuthMethod.none;
-              app_setup.biometricEnabled = false;
               try {
                 await FcmService().deleteToken();
               } catch (_) {}

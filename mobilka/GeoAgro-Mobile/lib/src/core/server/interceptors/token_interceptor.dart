@@ -8,7 +8,6 @@ import "package:package_info_plus/package_info_plus.dart";
 import "../../storage/app_storage.dart";
 import "../../routes/router_config.dart";
 import "../../routes/app_route_names.dart";
-import "../../services/pin_service.dart";
 import "../../setting/setup.dart";
 import "../../widgets/update_required_dialog.dart";
 
@@ -224,9 +223,6 @@ class TokenInterceptor extends Interceptor {
     userId = 0;
     districtId = 1;
     username = null;
-    appPinSet = false;
-    authMethod = AuthMethod.none;
-    biometricEnabled = false;
 
     if (parentNavigatorKey.currentContext != null) {
       parentNavigatorKey.currentContext!.go(AppRouteNames.login);

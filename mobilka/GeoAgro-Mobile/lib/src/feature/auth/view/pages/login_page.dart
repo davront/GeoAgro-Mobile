@@ -10,8 +10,6 @@ import 'package:agro_employee_public/design_system/tokens/motion.dart';
 import '../../vm/login_vm.dart';
 import '../../../../core/utils/utils.dart';
 import '../../../../core/tools/assets.dart';
-import '../../../../core/setting/setup.dart' as app_setup;
-import '../../../../core/services/pin_service.dart';
 import '../../../home/view/pages/home_page.dart' show homePageVM;
 import '../../../fermers/view/pages/fermers_page.dart' show fermerPageVM;
 import '../../../home/view/pages/natification_page.dart' show notificationsVM;
@@ -343,23 +341,10 @@ class _LoginPageState extends ConsumerState<LoginPage>
       // Даём snackbar отобразиться перед навигацией
       await Future.delayed(AppMotion.normal);
       if (!mounted || !context.mounted) return;
-      // Проверяем, установлен ли PIN
-      final hasPinSet = await PinService.instance.isPinSet();
-      if (!mounted || !context.mounted) return;
-      if (hasPinSet) {
-        // PIN уже есть — идём домой
-        app_setup.appPinSet = true;
-        final authMethod = await PinService.instance.getAuthMethod();
-        if (!mounted || !context.mounted) return;
-        app_setup.authMethod = authMethod;
-        ref.invalidate(homePageVM);
-        ref.invalidate(fermerPageVM);
-        ref.invalidate(notificationsVM);
-        context.go(AppRouteNames.home);
-      } else {
-        // PIN не установлен — обязательная установка
-        context.go(AppRouteNames.pinSetup);
-      }
+      ref.invalidate(homePageVM);
+      ref.invalidate(fermerPageVM);
+      ref.invalidate(notificationsVM);
+      context.go(AppRouteNames.home);
     } else {
       Utils.fireTopSnackBar(
         vm.errorMessage ?? "Xatolik yuz berdi",
