@@ -43,7 +43,9 @@ abstract class AppRepo {
   Future<String?> getFruitsRootstocks({required String rootstocks});
 
   Future<ApiResponse> postCreatePlantationWithImages(
-      {required Map<String, dynamic> body, required List<String> image});
+      {required Map<String, dynamic> body,
+      required List<String> image,
+      Map<String, String>? namedFiles});
 
   Future<ApiResponse> editPlantation(
       {required int id, required Map<String, dynamic> body});

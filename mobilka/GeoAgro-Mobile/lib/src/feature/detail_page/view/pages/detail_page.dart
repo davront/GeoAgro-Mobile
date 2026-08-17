@@ -22,6 +22,7 @@ import '../../../../../design_system/tokens/typography.dart';
 
 import '../../../../core/utils/utils.dart';
 import '../../../../core/widgets/custom_app_bar_widget.dart';
+import '../../../../core/widgets/doc_file_row.dart';
 
 import '../../../../data/model/plantation/new_plantation_model.dart';
 import '../../vm/detail_vm.dart';
@@ -299,11 +300,36 @@ class DetailPageState extends ConsumerState<DetailPage>
                       hintText: "shartnoma raqami kiritilmagan",
                       label: "Shartnoma raqami",
                     ),
+                    DocFileRow(
+                      label: "Shartnoma fayli (PDF)",
+                      fileUrl: detailVm.dealFilePath,
+                      isUploading: false,
+                      onTap: () async {
+                        final error = await detailVm.pickDocFile(isDeal: true);
+                        if (error != null && context.mounted) {
+                          Utils.fireTopSnackBar(
+                              error, design_colors.AppColors.error, context);
+                        }
+                      },
+                    ),
+                    SizedBox(height: 10.h),
                     CustomTextFieldWithLabel(
                       controller: detailVm.resolutionNumberController,
                       onTextChanged: (_) {},
                       hintText: "qaror raqami kiritilmagan",
                       label: "Qaror raqami",
+                    ),
+                    DocFileRow(
+                      label: "Qaror fayli (PDF)",
+                      fileUrl: detailVm.resolutionFilePath,
+                      isUploading: false,
+                      onTap: () async {
+                        final error = await detailVm.pickDocFile(isDeal: false);
+                        if (error != null && context.mounted) {
+                          Utils.fireTopSnackBar(
+                              error, design_colors.AppColors.error, context);
+                        }
+                      },
                     ),
                     SizedBox(height: 16.h),
                     MainText(text: "Kontur raqamlari"),

@@ -148,7 +148,8 @@ class ApiService {
   }
 
   static Future<ApiResponse> multipart(
-      String api, Map<String, dynamic> body, List<String> filePaths) async {
+      String api, Map<String, dynamic> body, List<String> filePaths,
+      {Map<String, String>? namedFiles}) async {
     try {
       final formData = FormData();
 
@@ -157,6 +158,15 @@ class ApiService {
         for (var i = 0; i < filePaths.length; i++) {
           formData.files.add(MapEntry("images[$i][images]",
               await MultipartFile.fromFile(filePaths[i])));
+        }
+      }
+
+      // deal_file/resolution_file — single named files, sent under their
+      // own field name (not the images[i][images] array above).
+      if (namedFiles != null) {
+        for (final entry in namedFiles.entries) {
+          formData.files.add(
+              MapEntry(entry.key, await MultipartFile.fromFile(entry.value)));
         }
       }
 

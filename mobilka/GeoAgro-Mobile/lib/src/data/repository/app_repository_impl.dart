@@ -539,10 +539,13 @@ class AppRepositoryImpl implements AppRepo {
   // ===== Plantations create/update =====
   @override
   Future<ApiResponse> postCreatePlantationWithImages(
-      {required Map<String, dynamic> body, required List<String> image}) async {
+      {required Map<String, dynamic> body,
+      required List<String> image,
+      Map<String, String>? namedFiles}) async {
     try {
-      final response =
-          await ApiService.multipart(ApiConst.apiCreatePlantation, body, image);
+      final response = await ApiService.multipart(
+          ApiConst.apiCreatePlantation, body, image,
+          namedFiles: namedFiles);
       return response;
     } catch (e) {
       log("Something went wrong at $e");

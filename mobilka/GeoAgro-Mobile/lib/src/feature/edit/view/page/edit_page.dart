@@ -16,6 +16,7 @@ import 'package:flutter/services.dart';
 import '../../../../core/utils/thousands_separator_input_formatter.dart';
 import '../../../../../localization/app_strings.dart';
 import '../../../../core/widgets/error_state_widget.dart';
+import '../../../../core/widgets/doc_file_row.dart';
 import '../../../../core/utils/utils.dart';
 import '../../../../../design_system/tokens/colors.dart' as design_colors;
 import 'package:agro_employee_public/design_system/tokens/adaptive_colors.dart';
@@ -280,7 +281,7 @@ class _EditPageState extends ConsumerState<EditPage>
                       hintText: "shartnoma raqami kiritilmagan",
                       label: "Shartnoma raqami",
                     ),
-                    _DocFileRow(
+                    DocFileRow(
                       label: "Shartnoma fayli (PDF)",
                       fileUrl: edit.plantationModel.dealFile,
                       isUploading: edit.isUploadingDealFile,
@@ -300,7 +301,7 @@ class _EditPageState extends ConsumerState<EditPage>
                       hintText: "qaror raqami kiritilmagan",
                       label: "Qaror raqami",
                     ),
-                    _DocFileRow(
+                    DocFileRow(
                       label: "Qaror fayli (PDF)",
                       fileUrl: edit.plantationModel.resolutionFile,
                       isUploading: edit.isUploadingResolutionFile,
@@ -981,55 +982,6 @@ class _EditPageState extends ConsumerState<EditPage>
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Строка "выбрать PDF" + ссылка на уже загруженный файл (если есть) для
-/// deal_file/resolution_file — оба грузятся сразу при выборе, не при save.
-class _DocFileRow extends StatelessWidget {
-  final String label;
-  final String? fileUrl;
-  final bool isUploading;
-  final VoidCallback onTap;
-
-  const _DocFileRow({
-    required this.label,
-    required this.fileUrl,
-    required this.isUploading,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 10.h),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              fileUrl != null ? "$label — yuklangan" : label,
-              style: AppTypography.bodyMedium(context).copyWith(
-                color: fileUrl != null
-                    ? design_colors.AppColors.success
-                    : context.colors.textSecondary,
-              ),
-            ),
-          ),
-          SizedBox(width: 8.w),
-          if (isUploading)
-            SizedBox(
-              height: 20.h,
-              width: 20.h,
-              child: const CircularProgressIndicator(strokeWidth: 2),
-            )
-          else
-            TextButton(
-              onPressed: onTap,
-              child: Text(fileUrl != null ? "Almashtirish" : "Yuklash"),
-            ),
-        ],
       ),
     );
   }

@@ -9,6 +9,7 @@ import 'package:agro_employee_public/src/data/model/fruits/fruit_rootstocks_mode
 import 'package:agro_employee_public/src/data/model/fruits/fruit_verity_modell.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:l/l.dart';
@@ -56,6 +57,32 @@ class DetailVM extends ChangeNotifier {
   TextEditingController emptyArea = TextEditingController();
   TextEditingController dealNumberController = TextEditingController();
   TextEditingController resolutionNumberController = TextEditingController();
+  // PDF выбирается сразу в create-форме, но грузится вместе с остальными
+  // полями в одном multipart create-запросе (в отличие от edit, где
+  // отдельный upload-запрос нужен — там плантация уже существует и
+  // mobile-update JSON-only).
+  String? dealFilePath;
+  String? resolutionFilePath;
+
+  Future<String?> pickDocFile({required bool isDeal}) async {
+    PlatformFile? picked;
+    try {
+      picked = await FilePicker.pickFile(
+          type: FileType.custom, allowedExtensions: ['pdf']);
+    } catch (e) {
+      return e.toString();
+    }
+    final path = picked?.path;
+    if (path == null) return null;
+    if (isDeal) {
+      dealFilePath = path;
+    } else {
+      resolutionFilePath = path;
+    }
+    notifyListeners();
+    return null;
+  }
+
   TextEditingController konturInputController = TextEditingController();
   TextEditingController tomchiSystemsArea = TextEditingController();
   TextEditingController tomchiSystemsCount = TextEditingController();
@@ -603,6 +630,10 @@ class DetailVM extends ChangeNotifier {
     for (var mapEntry in _imageFiles.entries) {
       images.add(mapEntry.value!.path);
     }
+    final namedFiles = <String, String>{
+      if (dealFilePath != null) 'deal_file': dealFilePath!,
+      if (resolutionFilePath != null) 'resolution_file': resolutionFilePath!,
+    };
 
     try {
       p.log("📦 DetailVM: Full JSON body before sending:");
@@ -618,7 +649,9 @@ class DetailVM extends ChangeNotifier {
       }
 
       final response = await _appRepositoryImpl.postCreatePlantationWithImages(
-          body: jsonData, image: images);
+          body: jsonData,
+          image: images,
+          namedFiles: namedFiles.isEmpty ? null : namedFiles);
       if (response.statusCode == 200 || response.statusCode == 201) {
         // ID созданной плантации нужен и для user_location, и для комментария
         dynamic responseData = response.data;
@@ -1502,6 +1535,8 @@ class DetailVM extends ChangeNotifier {
     emptyArea.clear();
     dealNumberController.clear();
     resolutionNumberController.clear();
+    dealFilePath = null;
+    resolutionFilePath = null;
     konturInputController.clear();
     tomchiSystemsArea.clear();
     tomchiSystemsCount.clear();
