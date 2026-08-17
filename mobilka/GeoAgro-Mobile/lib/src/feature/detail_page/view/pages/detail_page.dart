@@ -293,6 +293,18 @@ class DetailPageState extends ConsumerState<DetailPage>
                       ],
                       maxLength: 10,
                     ),
+                    CustomTextFieldWithLabel(
+                      controller: detailVm.dealNumberController,
+                      onTextChanged: (_) {},
+                      hintText: "shartnoma raqami kiritilmagan",
+                      label: "Shartnoma raqami",
+                    ),
+                    CustomTextFieldWithLabel(
+                      controller: detailVm.resolutionNumberController,
+                      onTextChanged: (_) {},
+                      hintText: "qaror raqami kiritilmagan",
+                      label: "Qaror raqami",
+                    ),
                     SizedBox(height: 16.h),
                     MainText(text: "Kontur raqamlari"),
                     SizedBox(height: 10.h),

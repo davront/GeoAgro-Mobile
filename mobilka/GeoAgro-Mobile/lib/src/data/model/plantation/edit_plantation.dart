@@ -54,6 +54,10 @@ class EditPlantationModel {
   int? createdBy;
   String? moderatedAt;
   int? moderatedBy;
+  String? dealNumber;
+  String? dealFile; // URL уже загруженного файла (сервер вернул в GET)
+  String? resolutionNumber;
+  String? resolutionFile; // URL уже загруженного файла (сервер вернул в GET)
 
   EditPlantationModel({
     this.id,
@@ -89,6 +93,10 @@ class EditPlantationModel {
     this.createdBy,
     this.moderatedAt,
     this.moderatedBy,
+    this.dealNumber,
+    this.dealFile,
+    this.resolutionNumber,
+    this.resolutionFile,
   });
 
   EditPlantationModel copyWith({
@@ -124,6 +132,10 @@ class EditPlantationModel {
     int? createdBy,
     String? moderatedAt,
     int? moderatedBy,
+    String? dealNumber,
+    String? dealFile,
+    String? resolutionNumber,
+    String? resolutionFile,
   }) =>
       EditPlantationModel(
         id: id ?? this.id,
@@ -160,6 +172,10 @@ class EditPlantationModel {
         createdBy: createdBy ?? this.createdBy,
         moderatedAt: moderatedAt ?? this.moderatedAt,
         moderatedBy: moderatedBy ?? this.moderatedBy,
+        dealNumber: dealNumber ?? this.dealNumber,
+        dealFile: dealFile ?? this.dealFile,
+        resolutionNumber: resolutionNumber ?? this.resolutionNumber,
+        resolutionFile: resolutionFile ?? this.resolutionFile,
       );
 
   factory EditPlantationModel.fromJson(Map<String, dynamic> json) =>
@@ -266,6 +282,10 @@ class EditPlantationModel {
         createdBy: json["created_by"],
         moderatedAt: json["moderated_at"]?.toString(),
         moderatedBy: json["moderated_by"],
+        dealNumber: json["deal_number"],
+        dealFile: json["deal_file"]?.toString(),
+        resolutionNumber: json["resolution_number"],
+        resolutionFile: json["resolution_file"]?.toString(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -318,6 +338,8 @@ class EditPlantationModel {
         "created_by": createdBy,
         "moderated_at": moderatedAt,
         "moderated_by": moderatedBy,
+        "deal_number": dealNumber,
+        "resolution_number": resolutionNumber,
       };
 }
 

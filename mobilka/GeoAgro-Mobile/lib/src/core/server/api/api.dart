@@ -293,6 +293,49 @@ class ApiService {
     }
   }
 
+  /// Загружает файл под произвольным именем поля через PATCH multipart.
+  /// Используется для deal_file/resolution_file на
+  /// `/api/plantations/{id}/` — тот endpoint (не mobile-update) единственный
+  /// принимает multipart для этих полей; mobile-update — JSON-only.
+  static Future<ApiResponse> patchFile(
+      String api, String fieldName, String filePath,
+      {Map<String, dynamic>? extraFields}) async {
+    try {
+      final mimeType = lookupMimeType(filePath) ?? 'application/octet-stream';
+      final type = mimeType.split('/');
+      final formData = FormData.fromMap({
+        if (extraFields != null) ...extraFields,
+        fieldName: await MultipartFile.fromFile(
+          filePath,
+          contentType:
+              MediaType(type.first, type.length > 1 ? type[1] : 'octet-stream'),
+        ),
+      });
+
+      final response = await (await initDio()).patch<dynamic>(
+        api,
+        data: formData,
+        options: Options(
+          headers: await ApiService.getHeaders(isUpload: true),
+        ),
+      );
+
+      return ApiResponse(
+          statusCode: response.statusCode ?? 500, data: response.data);
+    } on TimeoutException catch (_) {
+      l.e("The connection has timed out, Please try again!");
+      rethrow;
+    } on DioException catch (e) {
+      l.e(e.response.toString());
+      return ApiResponse(
+          statusCode: e.response?.statusCode ?? 500,
+          data: e.response?.data ?? {"message": e.message});
+    } on Object catch (e) {
+      l.e(e.toString());
+      return ApiResponse(statusCode: 500, data: {"message": e.toString()});
+    }
+  }
+
   static Future<ApiResponse> postFile(String api, String filePath) async {
     try {
       final mimeType = lookupMimeType(filePath) ?? 'image/jpeg';

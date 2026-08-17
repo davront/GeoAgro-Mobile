@@ -628,6 +628,25 @@ class AppRepositoryImpl implements AppRepo {
     }
   }
 
+  /// Загружает deal_file/resolution_file через единственный endpoint,
+  /// принимающий multipart для этих полей (не mobile-update — тот JSON-only).
+  Future<ApiResponse> uploadPlantationDocFile({
+    required int id,
+    required String fieldName,
+    required String filePath,
+  }) async {
+    try {
+      final response = await ApiService.patchFile(
+        ApiConst.apiPlantationFiles(id),
+        fieldName,
+        filePath,
+      );
+      return response;
+    } catch (e) {
+      return ApiResponse(statusCode: 500, data: {"message": e.toString()});
+    }
+  }
+
   @override
   Future<String?> deletePlantationImage(
       {required int plantationId, required int imageId}) async {

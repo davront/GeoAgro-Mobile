@@ -15,6 +15,10 @@ final class ApiConst {
   static String apiDeleteImage(int plantationId, int imageId) =>
       '/api/plantations/$plantationId/images/$imageId/';
   static String apiDeletePlantation(int id) => '/api/plantations/$id/';
+  // Тот же URL, что apiDeletePlantation — RetrieveDestroyAPIView, единственный
+  // endpoint, принимающий multipart для deal_file/resolution_file. Отдельное
+  // имя для ясности на call site (upload, не delete).
+  static String apiPlantationFiles(int id) => '/api/plantations/$id/';
 
   static const String apiLogin = "/api/login/";
   static const String apiPlantations = "/api/plantations/";

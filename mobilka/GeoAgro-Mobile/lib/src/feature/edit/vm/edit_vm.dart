@@ -8,6 +8,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:agro_employee_public/src/data/model/plantation/edit_plantation.dart';
 import 'package:agro_employee_public/src/data/repository/app_repository_impl.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../view/widget/edit_fruit_bottom_shit.dart';
@@ -87,6 +88,8 @@ class EditVM extends ChangeNotifier {
   late double unumdorlikValue;
   TextEditingController notUsableArea = TextEditingController();
   TextEditingController emptyArea = TextEditingController();
+  TextEditingController dealNumberController = TextEditingController();
+  TextEditingController resolutionNumberController = TextEditingController();
   TextEditingController investmentXorijiyAmount = TextEditingController();
   TextEditingController investmentMahhalliyAmount = TextEditingController();
   TextEditingController irrigationAreaController = TextEditingController();
@@ -475,6 +478,19 @@ class EditVM extends ChangeNotifier {
       }
     }
 
+    // deal_number / resolution_number — include only if actually changed.
+    // deal_file/resolution_file are not sent here: mobile-update accepts
+    // JSON only, no multipart, and no separate upload endpoint exists yet
+    // for those files.
+    if (_stringChanged(
+        dealNumberController.text, originalPlantationModel.dealNumber)) {
+      body["deal_number"] = dealNumberController.text.trim();
+    }
+    if (_stringChanged(resolutionNumberController.text,
+        originalPlantationModel.resolutionNumber)) {
+      body["resolution_number"] = resolutionNumberController.text.trim();
+    }
+
     // is_fertile
     body["is_fertile"] = ref.read(switchIsFertile);
 
@@ -541,6 +557,10 @@ class EditVM extends ChangeNotifier {
     return (a - b).abs() > 1e-9;
   }
 
+  bool _stringChanged(String? a, String? b) =>
+      (a?.trim().isEmpty ?? true ? null : a?.trim()) !=
+      (b?.trim().isEmpty ?? true ? null : b?.trim());
+
   bool _isLoadingDetail = false;
 
   Future<void> getPlantationDetail(WidgetRef ref, int id) async {
@@ -575,6 +595,9 @@ class EditVM extends ChangeNotifier {
           plantationModel.emptyArea,
           thousandsSeparator: '',
         );
+        dealNumberController.text = plantationModel.dealNumber ?? '';
+        resolutionNumberController.text =
+            plantationModel.resolutionNumber ?? '';
         selectedDetails = plantationModel.fruitAreas ?? [];
         // Бэк иногда возвращает "fruit"/"variety"/"rootstock" как имя-строку
         // вместо id или {id,name}-объекта (напр. "fruit": "Olcha") —
@@ -1584,6 +1607,70 @@ class EditVM extends ChangeNotifier {
         cardId: cardId, source: ImageSource.camera, context: context);
   }
 
+  // ===== deal_file / resolution_file (PDF) =====
+  //
+  // Оба поля грузятся через один и тот же endpoint, что и весь остальной
+  // PUT/PATCH на плантацию (apiPlantationFiles = /api/plantations/{id}/),
+  // но mobile-update (обычный save-путь этой формы) — JSON-only и не может
+  // принять файл. Поэтому загрузка идёт сразу при выборе файла, отдельным
+  // запросом — как фото плантации, не откладывается до "Сохранить".
+  bool isUploadingDealFile = false;
+  bool isUploadingResolutionFile = false;
+
+  Future<String?> pickAndUploadDocFile({required bool isDeal}) async {
+    final plantationId = plantationModel.id;
+    if (plantationId == null) return null;
+
+    PlatformFile? picked;
+    try {
+      picked = await FilePicker.pickFile(
+          type: FileType.custom, allowedExtensions: ['pdf']);
+    } catch (e) {
+      return e.toString();
+    }
+    final path = picked?.path;
+    if (path == null) return null;
+
+    if (isDeal) {
+      isUploadingDealFile = true;
+    } else {
+      isUploadingResolutionFile = true;
+    }
+    notifyListeners();
+
+    try {
+      final resp = await _appRepositoryImpl.uploadPlantationDocFile(
+        id: plantationId,
+        fieldName: isDeal ? 'deal_file' : 'resolution_file',
+        filePath: path,
+      );
+      if (resp.statusCode == 200 || resp.statusCode == 201) {
+        final data = resp.data;
+        if (data is Map<String, dynamic>) {
+          if (isDeal) {
+            plantationModel.dealFile = data['deal_file']?.toString();
+          } else {
+            plantationModel.resolutionFile =
+                data['resolution_file']?.toString();
+          }
+        }
+        return null;
+      }
+      return (resp.data is Map && resp.data['message'] is String)
+          ? resp.data['message'] as String
+          : 'Faylni yuklashda xatolik';
+    } catch (e) {
+      return e.toString();
+    } finally {
+      if (isDeal) {
+        isUploadingDealFile = false;
+      } else {
+        isUploadingResolutionFile = false;
+      }
+      notifyListeners();
+    }
+  }
+
   Future<void> getFruit() async {
     isLoading2 = true;
     notifyListeners();
@@ -2267,6 +2354,8 @@ class EditVM extends ChangeNotifier {
   void dispose() {
     notUsableArea.dispose();
     emptyArea.dispose();
+    dealNumberController.dispose();
+    resolutionNumberController.dispose();
     investmentXorijiyAmount.dispose();
     investmentMahhalliyAmount.dispose();
     irrigationAreaController.dispose();

@@ -54,6 +54,8 @@ class DetailVM extends ChangeNotifier {
 
   TextEditingController notUsableArea = TextEditingController();
   TextEditingController emptyArea = TextEditingController();
+  TextEditingController dealNumberController = TextEditingController();
+  TextEditingController resolutionNumberController = TextEditingController();
   TextEditingController konturInputController = TextEditingController();
   TextEditingController tomchiSystemsArea = TextEditingController();
   TextEditingController tomchiSystemsCount = TextEditingController();
@@ -584,6 +586,8 @@ class DetailVM extends ChangeNotifier {
       trellises: mockTrellises,
       reservoirs: mockReservoir,
       fruitAreas: mockFruitArea,
+      dealNumber: dealNumberController.text.trim(),
+      resolutionNumber: resolutionNumberController.text.trim(),
     );
     final jsonData = mockGarden.toJson();
     // Send kontur numbers as-is (alphanumeric), already sanitized by input formatter
@@ -1496,6 +1500,8 @@ class DetailVM extends ChangeNotifier {
   void resetForNewPlantation(WidgetRef ref) {
     notUsableArea.clear();
     emptyArea.clear();
+    dealNumberController.clear();
+    resolutionNumberController.clear();
     konturInputController.clear();
     tomchiSystemsArea.clear();
     tomchiSystemsCount.clear();

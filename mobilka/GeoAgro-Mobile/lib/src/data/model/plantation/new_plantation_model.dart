@@ -202,6 +202,8 @@ class Garden {
   final List<Subsidy>? subsidies;
   final List<Reservoir>? reservoirs;
   final List<FruitArea>? fruitAreas;
+  final String? dealNumber;
+  final String? resolutionNumber;
 
   Garden({
     this.gardenEstablishedYear,
@@ -221,6 +223,8 @@ class Garden {
     this.subsidies,
     this.reservoirs,
     this.fruitAreas,
+    this.dealNumber,
+    this.resolutionNumber,
   });
 
   Map<String, dynamic> toJson() {
@@ -235,6 +239,10 @@ class Garden {
       'not_usable_area': notUsableArea,
       'irrigation_systems_count': irrigationSystemsCount,
       'is_fertile': isFertile,
+      if (dealNumber != null && dealNumber!.isNotEmpty)
+        'deal_number': dealNumber,
+      if (resolutionNumber != null && resolutionNumber!.isNotEmpty)
+        'resolution_number': resolutionNumber,
     };
     if (types != null) {
       json['types[plantation_type]'] = types!.plantationType;
@@ -288,29 +296,32 @@ class Garden {
     if (fruitAreas != null) {
       for (int i = 0; i < fruitAreas!.length; i++) {
         final fa = fruitAreas![i];
-        
+
         // Базовые поля для обоих режимов
         json['fruit_areas[$i][fruit]'] = fa.fruit;
         json['fruit_areas[$i][variety]'] = fa.variety;
-        json['fruit_areas[$i][iqtisodiy_samarasiz]'] = fa.iqtisodiysamarasiz ?? false;
-        
+        json['fruit_areas[$i][iqtisodiy_samarasiz]'] =
+            fa.iqtisodiysamarasiz ?? false;
+
         // rootstock опционален для обоих режимов
         if (fa.rootstock != null) {
           json['fruit_areas[$i][rootstock]'] = fa.rootstock;
         }
-        
+
         if (fa.iqtisodiysamarasiz == true) {
           // Экономически неэффективная площадь
-          json['fruit_areas[$i][economic_inefficient_area]'] = fa.economicInefficientArea ?? 0.0;
+          json['fruit_areas[$i][economic_inefficient_area]'] =
+              fa.economicInefficientArea ?? 0.0;
           // planted_year, area, schema, weight, fenced автоматически устанавливаются бэкендом
         } else {
           // Обычная посадка
           json['fruit_areas[$i][planted_year]'] = fa.plantedYear;
           json['fruit_areas[$i][area]'] = fa.area?.toString() ?? '0';
-          
+
           // Опциональные поля
           if (fa.schema != null) json['fruit_areas[$i][schema]'] = fa.schema;
-          if (fa.weight != null) json['fruit_areas[$i][weight]'] = fa.weight.toString();
+          if (fa.weight != null)
+            json['fruit_areas[$i][weight]'] = fa.weight.toString();
           if (fa.fenced != null) json['fruit_areas[$i][fenced]'] = fa.fenced;
         }
       }
