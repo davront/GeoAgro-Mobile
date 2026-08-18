@@ -294,42 +294,78 @@ class DetailPageState extends ConsumerState<DetailPage>
                       ],
                       maxLength: 10,
                     ),
-                    CustomTextFieldWithLabel(
-                      controller: detailVm.dealNumberController,
-                      onTextChanged: (_) {},
-                      hintText: "shartnoma raqami kiritilmagan",
-                      label: "Shartnoma raqami",
-                    ),
-                    DocFileRow(
-                      label: "Shartnoma fayli (PDF)",
-                      fileUrl: detailVm.dealFilePath,
-                      isUploading: false,
-                      onTap: () async {
-                        final error = await detailVm.pickDocFile(isDeal: true);
-                        if (error != null && context.mounted) {
-                          Utils.fireTopSnackBar(
-                              error, design_colors.AppColors.error, context);
-                        }
-                      },
-                    ),
-                    SizedBox(height: 10.h),
-                    CustomTextFieldWithLabel(
-                      controller: detailVm.resolutionNumberController,
-                      onTextChanged: (_) {},
-                      hintText: "qaror raqami kiritilmagan",
-                      label: "Qaror raqami",
-                    ),
-                    DocFileRow(
-                      label: "Qaror fayli (PDF)",
-                      fileUrl: detailVm.resolutionFilePath,
-                      isUploading: false,
-                      onTap: () async {
-                        final error = await detailVm.pickDocFile(isDeal: false);
-                        if (error != null && context.mounted) {
-                          Utils.fireTopSnackBar(
-                              error, design_colors.AppColors.error, context);
-                        }
-                      },
+                    Container(
+                      width: double.infinity,
+                      padding: REdgeInsets.all(12),
+                      margin: EdgeInsets.only(bottom: 16.h),
+                      decoration: BoxDecoration(
+                        color: context.colors.surfaceVariant,
+                        borderRadius: BorderRadius.circular(AppRadii.card),
+                        border: Border.all(
+                          color: context.colors.border.withValues(
+                              alpha: context.colors.isDark ? 1 : 0.5),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          MainText(text: "Shartnoma va qaror hujjatlari"),
+                          SizedBox(height: 12.h),
+                          CustomTextFieldWithLabel(
+                            controller: detailVm.dealNumberController,
+                            onTextChanged: (_) {},
+                            hintText: "shartnoma raqami kiritilmagan",
+                            label: "Shartnoma raqami",
+                          ),
+                          SizedBox(height: 8.h),
+                          CreatedTime(
+                            selectedDate: detailVm.dealDate,
+                            setSelectedDate: detailVm.setDealDate,
+                          ),
+                          SizedBox(height: 8.h),
+                          DocFileRow(
+                            label: "Shartnoma fayli (PDF)",
+                            fileUrl: detailVm.dealFilePath,
+                            isUploading: false,
+                            onTap: () async {
+                              final error =
+                                  await detailVm.pickDocFile(isDeal: true);
+                              if (error != null && context.mounted) {
+                                Utils.fireTopSnackBar(error,
+                                    design_colors.AppColors.error, context);
+                              }
+                            },
+                          ),
+                          SizedBox(height: 16.h),
+                          Divider(color: context.colors.border),
+                          SizedBox(height: 4.h),
+                          CustomTextFieldWithLabel(
+                            controller: detailVm.resolutionNumberController,
+                            onTextChanged: (_) {},
+                            hintText: "qaror raqami kiritilmagan",
+                            label: "Qaror raqami",
+                          ),
+                          SizedBox(height: 8.h),
+                          CreatedTime(
+                            selectedDate: detailVm.resolutionDate,
+                            setSelectedDate: detailVm.setResolutionDate,
+                          ),
+                          SizedBox(height: 8.h),
+                          DocFileRow(
+                            label: "Qaror fayli (PDF)",
+                            fileUrl: detailVm.resolutionFilePath,
+                            isUploading: false,
+                            onTap: () async {
+                              final error =
+                                  await detailVm.pickDocFile(isDeal: false);
+                              if (error != null && context.mounted) {
+                                Utils.fireTopSnackBar(error,
+                                    design_colors.AppColors.error, context);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                     SizedBox(height: 16.h),
                     MainText(text: "Kontur raqamlari"),

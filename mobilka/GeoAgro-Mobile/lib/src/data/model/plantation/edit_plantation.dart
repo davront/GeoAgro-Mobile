@@ -56,8 +56,10 @@ class EditPlantationModel {
   int? moderatedBy;
   String? dealNumber;
   String? dealFile; // URL уже загруженного файла (сервер вернул в GET)
+  String? dealDate;
   String? resolutionNumber;
   String? resolutionFile; // URL уже загруженного файла (сервер вернул в GET)
+  String? resolutionDate;
 
   EditPlantationModel({
     this.id,
@@ -95,8 +97,10 @@ class EditPlantationModel {
     this.moderatedBy,
     this.dealNumber,
     this.dealFile,
+    this.dealDate,
     this.resolutionNumber,
     this.resolutionFile,
+    this.resolutionDate,
   });
 
   EditPlantationModel copyWith({
@@ -134,8 +138,10 @@ class EditPlantationModel {
     int? moderatedBy,
     String? dealNumber,
     String? dealFile,
+    String? dealDate,
     String? resolutionNumber,
     String? resolutionFile,
+    String? resolutionDate,
   }) =>
       EditPlantationModel(
         id: id ?? this.id,
@@ -174,8 +180,10 @@ class EditPlantationModel {
         moderatedBy: moderatedBy ?? this.moderatedBy,
         dealNumber: dealNumber ?? this.dealNumber,
         dealFile: dealFile ?? this.dealFile,
+        dealDate: dealDate ?? this.dealDate,
         resolutionNumber: resolutionNumber ?? this.resolutionNumber,
         resolutionFile: resolutionFile ?? this.resolutionFile,
+        resolutionDate: resolutionDate ?? this.resolutionDate,
       );
 
   factory EditPlantationModel.fromJson(Map<String, dynamic> json) =>
@@ -284,8 +292,10 @@ class EditPlantationModel {
         moderatedBy: json["moderated_by"],
         dealNumber: json["deal_number"],
         dealFile: json["deal_file"]?.toString(),
+        dealDate: json["deal_date"]?.toString(),
         resolutionNumber: json["resolution_number"],
         resolutionFile: json["resolution_file"]?.toString(),
+        resolutionDate: json["resolution_date"]?.toString(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -339,7 +349,9 @@ class EditPlantationModel {
         "moderated_at": moderatedAt,
         "moderated_by": moderatedBy,
         "deal_number": dealNumber,
+        "deal_date": dealDate,
         "resolution_number": resolutionNumber,
+        "resolution_date": resolutionDate,
       };
 }
 

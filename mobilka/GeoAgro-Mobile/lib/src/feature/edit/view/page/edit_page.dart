@@ -24,6 +24,7 @@ import '../../../../../design_system/tokens/spacing.dart';
 import '../../../../../design_system/tokens/radii.dart';
 import '../../../../../design_system/tokens/typography.dart';
 import '../../../detail_page/view/widgets/border_widget.dart';
+import '../../../detail_page/view/widgets/created_time_widget.dart';
 import '../../../detail_page/view/widgets/detail_text_fild_widget.dart';
 import '../../../detail_page/view/widgets/productivity_indicator_widget.dart';
 import '../../../detail_page/view/widgets/subsidiya_button.dart';
@@ -275,46 +276,79 @@ class _EditPageState extends ConsumerState<EditPage>
                       ],
                       maxLength: 10,
                     ),
-                    CustomTextFieldWithLabel(
-                      controller: edit.dealNumberController,
-                      onTextChanged: (_) {},
-                      hintText: "shartnoma raqami kiritilmagan",
-                      label: "Shartnoma raqami",
+                    Container(
+                      width: double.infinity,
+                      padding: REdgeInsets.all(12),
+                      margin: EdgeInsets.only(bottom: 16.h),
+                      decoration: BoxDecoration(
+                        color: context.colors.surfaceVariant,
+                        borderRadius: BorderRadius.circular(AppRadii.card),
+                        border: Border.all(
+                          color: context.colors.border.withValues(
+                              alpha: context.colors.isDark ? 1 : 0.5),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          MainText(text: "Shartnoma va qaror hujjatlari"),
+                          SizedBox(height: 12.h),
+                          CustomTextFieldWithLabel(
+                            controller: edit.dealNumberController,
+                            onTextChanged: (_) {},
+                            hintText: "shartnoma raqami kiritilmagan",
+                            label: "Shartnoma raqami",
+                          ),
+                          SizedBox(height: 8.h),
+                          CreatedTime(
+                            selectedDate: edit.dealDate,
+                            setSelectedDate: edit.setDealDate,
+                          ),
+                          SizedBox(height: 8.h),
+                          DocFileRow(
+                            label: "Shartnoma fayli (PDF)",
+                            fileUrl: edit.plantationModel.dealFile,
+                            isUploading: edit.isUploadingDealFile,
+                            onTap: () async {
+                              final error =
+                                  await edit.pickAndUploadDocFile(isDeal: true);
+                              if (error != null && context.mounted) {
+                                Utils.fireTopSnackBar(error,
+                                    design_colors.AppColors.error, context);
+                              }
+                            },
+                          ),
+                          SizedBox(height: 16.h),
+                          Divider(color: context.colors.border),
+                          SizedBox(height: 4.h),
+                          CustomTextFieldWithLabel(
+                            controller: edit.resolutionNumberController,
+                            onTextChanged: (_) {},
+                            hintText: "qaror raqami kiritilmagan",
+                            label: "Qaror raqami",
+                          ),
+                          SizedBox(height: 8.h),
+                          CreatedTime(
+                            selectedDate: edit.resolutionDate,
+                            setSelectedDate: edit.setResolutionDate,
+                          ),
+                          SizedBox(height: 8.h),
+                          DocFileRow(
+                            label: "Qaror fayli (PDF)",
+                            fileUrl: edit.plantationModel.resolutionFile,
+                            isUploading: edit.isUploadingResolutionFile,
+                            onTap: () async {
+                              final error = await edit.pickAndUploadDocFile(
+                                  isDeal: false);
+                              if (error != null && context.mounted) {
+                                Utils.fireTopSnackBar(error,
+                                    design_colors.AppColors.error, context);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                    DocFileRow(
-                      label: "Shartnoma fayli (PDF)",
-                      fileUrl: edit.plantationModel.dealFile,
-                      isUploading: edit.isUploadingDealFile,
-                      onTap: () async {
-                        final error =
-                            await edit.pickAndUploadDocFile(isDeal: true);
-                        if (error != null && context.mounted) {
-                          Utils.fireTopSnackBar(
-                              error, design_colors.AppColors.error, context);
-                        }
-                      },
-                    ),
-                    SizedBox(height: 10.h),
-                    CustomTextFieldWithLabel(
-                      controller: edit.resolutionNumberController,
-                      onTextChanged: (_) {},
-                      hintText: "qaror raqami kiritilmagan",
-                      label: "Qaror raqami",
-                    ),
-                    DocFileRow(
-                      label: "Qaror fayli (PDF)",
-                      fileUrl: edit.plantationModel.resolutionFile,
-                      isUploading: edit.isUploadingResolutionFile,
-                      onTap: () async {
-                        final error =
-                            await edit.pickAndUploadDocFile(isDeal: false);
-                        if (error != null && context.mounted) {
-                          Utils.fireTopSnackBar(
-                              error, design_colors.AppColors.error, context);
-                        }
-                      },
-                    ),
-                    SizedBox(height: 16.h),
                     MainText(text: "Kontur raqamlari"),
                     SizedBox(height: 10.h),
                     Row(

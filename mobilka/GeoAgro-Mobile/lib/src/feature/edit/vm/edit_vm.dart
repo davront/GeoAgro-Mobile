@@ -90,6 +90,19 @@ class EditVM extends ChangeNotifier {
   TextEditingController emptyArea = TextEditingController();
   TextEditingController dealNumberController = TextEditingController();
   TextEditingController resolutionNumberController = TextEditingController();
+  DateTime? dealDate;
+  DateTime? resolutionDate;
+
+  void setDealDate(DateTime date) {
+    dealDate = date;
+    notifyListeners();
+  }
+
+  void setResolutionDate(DateTime date) {
+    resolutionDate = date;
+    notifyListeners();
+  }
+
   TextEditingController investmentXorijiyAmount = TextEditingController();
   TextEditingController investmentMahhalliyAmount = TextEditingController();
   TextEditingController irrigationAreaController = TextEditingController();
@@ -490,6 +503,18 @@ class EditVM extends ChangeNotifier {
         originalPlantationModel.resolutionNumber)) {
       body["resolution_number"] = resolutionNumberController.text.trim();
     }
+    final dealDateStr =
+        dealDate != null ? DateFormat('yyyy-MM-dd').format(dealDate!) : null;
+    if (_stringChanged(dealDateStr, originalPlantationModel.dealDate)) {
+      body["deal_date"] = dealDateStr;
+    }
+    final resolutionDateStr = resolutionDate != null
+        ? DateFormat('yyyy-MM-dd').format(resolutionDate!)
+        : null;
+    if (_stringChanged(
+        resolutionDateStr, originalPlantationModel.resolutionDate)) {
+      body["resolution_date"] = resolutionDateStr;
+    }
 
     // is_fertile
     body["is_fertile"] = ref.read(switchIsFertile);
@@ -598,6 +623,12 @@ class EditVM extends ChangeNotifier {
         dealNumberController.text = plantationModel.dealNumber ?? '';
         resolutionNumberController.text =
             plantationModel.resolutionNumber ?? '';
+        dealDate = plantationModel.dealDate != null
+            ? DateTime.tryParse(plantationModel.dealDate!)
+            : null;
+        resolutionDate = plantationModel.resolutionDate != null
+            ? DateTime.tryParse(plantationModel.resolutionDate!)
+            : null;
         selectedDetails = plantationModel.fruitAreas ?? [];
         // Бэк иногда возвращает "fruit"/"variety"/"rootstock" как имя-строку
         // вместо id или {id,name}-объекта (напр. "fruit": "Olcha") —
@@ -875,6 +906,31 @@ class EditVM extends ChangeNotifier {
     // 9) Meva maydonlari
     if (selectedDetails.isEmpty) {
       return "Kamida bitta meva maydoni qo'shing";
+    }
+
+    // 9.1) Shartnoma/qaror: raqam, sana, fayl — uchtasi bir guruh. Birortasi
+    // to'ldirilgan bo'lsa, qolgan ikkitasi ham majburiy. Fayl edit-oqimida
+    // darhol tanlash paytida yuklanadi, shuning uchun submit vaqtida faqat
+    // "allaqachon yuklangan" holatini tekshiramiz.
+    final dealNumberFilled = dealNumberController.text.trim().isNotEmpty;
+    final dealDateFilled = dealDate != null;
+    final dealFileFilled = plantationModel.dealFile != null;
+    if (dealNumberFilled || dealDateFilled || dealFileFilled) {
+      if (!dealNumberFilled) return "Shartnoma raqami kiritilmagan";
+      if (!dealDateFilled) return "Shartnoma sanasi tanlanmagan";
+      if (!dealFileFilled) return "Shartnoma fayli yuklanmagan";
+    }
+
+    final resolutionNumberFilled =
+        resolutionNumberController.text.trim().isNotEmpty;
+    final resolutionDateFilled = resolutionDate != null;
+    final resolutionFileFilled = plantationModel.resolutionFile != null;
+    if (resolutionNumberFilled ||
+        resolutionDateFilled ||
+        resolutionFileFilled) {
+      if (!resolutionNumberFilled) return "Qaror raqami kiritilmagan";
+      if (!resolutionDateFilled) return "Qaror sanasi tanlanmagan";
+      if (!resolutionFileFilled) return "Qaror fayli yuklanmagan";
     }
 
     // 10) Проверка разницы между площадью полигона (chegaraArea) и общей площадью плантации (не более 15%)

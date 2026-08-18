@@ -12,6 +12,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:intl/intl.dart';
 import 'package:l/l.dart';
 
 import '../../../data/model/plantation/new_plantation_model.dart';
@@ -63,6 +64,18 @@ class DetailVM extends ChangeNotifier {
   // mobile-update JSON-only).
   String? dealFilePath;
   String? resolutionFilePath;
+  DateTime? dealDate;
+  DateTime? resolutionDate;
+
+  void setDealDate(DateTime date) {
+    dealDate = date;
+    notifyListeners();
+  }
+
+  void setResolutionDate(DateTime date) {
+    resolutionDate = date;
+    notifyListeners();
+  }
 
   Future<String?> pickDocFile({required bool isDeal}) async {
     PlatformFile? picked;
@@ -614,7 +627,12 @@ class DetailVM extends ChangeNotifier {
       reservoirs: mockReservoir,
       fruitAreas: mockFruitArea,
       dealNumber: dealNumberController.text.trim(),
+      dealDate:
+          dealDate != null ? DateFormat('yyyy-MM-dd').format(dealDate!) : null,
       resolutionNumber: resolutionNumberController.text.trim(),
+      resolutionDate: resolutionDate != null
+          ? DateFormat('yyyy-MM-dd').format(resolutionDate!)
+          : null,
     );
     final jsonData = mockGarden.toJson();
     // Send kontur numbers as-is (alphanumeric), already sanitized by input formatter
@@ -971,6 +989,29 @@ class DetailVM extends ChangeNotifier {
     }
     if (selectedDetails.isEmpty) {
       return 'Meva maydoni tanlanmagan, tanlovni bajaring';
+    }
+
+    // Shartnoma/qaror: raqam, sana, fayl — uchtasi bir guruh. Birortasi
+    // to'ldirilgan bo'lsa, qolgan ikkitasi ham majburiy.
+    final dealNumberFilled = dealNumberController.text.trim().isNotEmpty;
+    final dealDateFilled = dealDate != null;
+    final dealFileFilled = dealFilePath != null;
+    if (dealNumberFilled || dealDateFilled || dealFileFilled) {
+      if (!dealNumberFilled) return 'Shartnoma raqami kiritilmagan';
+      if (!dealDateFilled) return 'Shartnoma sanasi tanlanmagan';
+      if (!dealFileFilled) return 'Shartnoma fayli tanlanmagan';
+    }
+
+    final resolutionNumberFilled =
+        resolutionNumberController.text.trim().isNotEmpty;
+    final resolutionDateFilled = resolutionDate != null;
+    final resolutionFileFilled = resolutionFilePath != null;
+    if (resolutionNumberFilled ||
+        resolutionDateFilled ||
+        resolutionFileFilled) {
+      if (!resolutionNumberFilled) return 'Qaror raqami kiritilmagan';
+      if (!resolutionDateFilled) return 'Qaror sanasi tanlanmagan';
+      if (!resolutionFileFilled) return 'Qaror fayli tanlanmagan';
     }
 
     // Проверка разницы между площадью полигона и общей площадью плантации (не более 15%)
@@ -1537,6 +1578,8 @@ class DetailVM extends ChangeNotifier {
     resolutionNumberController.clear();
     dealFilePath = null;
     resolutionFilePath = null;
+    dealDate = null;
+    resolutionDate = null;
     konturInputController.clear();
     tomchiSystemsArea.clear();
     tomchiSystemsCount.clear();

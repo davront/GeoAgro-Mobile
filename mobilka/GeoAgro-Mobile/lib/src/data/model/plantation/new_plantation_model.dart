@@ -203,7 +203,9 @@ class Garden {
   final List<Reservoir>? reservoirs;
   final List<FruitArea>? fruitAreas;
   final String? dealNumber;
+  final String? dealDate;
   final String? resolutionNumber;
+  final String? resolutionDate;
 
   Garden({
     this.gardenEstablishedYear,
@@ -224,7 +226,9 @@ class Garden {
     this.reservoirs,
     this.fruitAreas,
     this.dealNumber,
+    this.dealDate,
     this.resolutionNumber,
+    this.resolutionDate,
   });
 
   Map<String, dynamic> toJson() {
@@ -241,8 +245,11 @@ class Garden {
       'is_fertile': isFertile,
       if (dealNumber != null && dealNumber!.isNotEmpty)
         'deal_number': dealNumber,
+      if (dealDate != null && dealDate!.isNotEmpty) 'deal_date': dealDate,
       if (resolutionNumber != null && resolutionNumber!.isNotEmpty)
         'resolution_number': resolutionNumber,
+      if (resolutionDate != null && resolutionDate!.isNotEmpty)
+        'resolution_date': resolutionDate,
     };
     if (types != null) {
       json['types[plantation_type]'] = types!.plantationType;
