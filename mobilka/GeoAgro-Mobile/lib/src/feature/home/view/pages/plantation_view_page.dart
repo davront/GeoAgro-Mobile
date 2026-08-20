@@ -1458,40 +1458,45 @@ class _PlantationViewPageState extends ConsumerState<PlantationViewPage> {
     //   return const SizedBox.shrink();
     // }
 
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          child: FilledButton.icon(
-            onPressed: () {
-              if (plantation.id != null) {
-                context.go(
-                  "${AppRouteNames.home}${AppRouteNames.editPage}",
-                  extra: plantation.id,
-                );
-              }
-            },
-            icon: const Icon(Icons.edit_outlined, size: 20),
-            label: const Text("Tahrirlash"),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                vertical: AppSpacing.lg,
-              ),
-            ),
-          ),
+        _EditModeButton(
+          icon: Icons.edit_location_alt_outlined,
+          label: "Tahrirlash (joyida)",
+          subtitle: "Maydon, tur, rasmlar — joyida turib to'ldiriladi",
+          onPressed: plantation.id == null
+              ? null
+              : () => context.go(
+                    "${AppRouteNames.home}${AppRouteNames.editPage}",
+                    extra: plantation.id,
+                  ),
         ),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(
-          child: FilledButton.tonalIcon(
-            onPressed: () => _handleDelete(context, plantation, mapVm),
-            icon: const Icon(Icons.delete_outline, size: 20),
-            label: const Text("O'chirish"),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                vertical: AppSpacing.lg,
-              ),
-              backgroundColor: colorScheme.errorContainer,
-              foregroundColor: colorScheme.onErrorContainer,
+        const SizedBox(height: AppSpacing.sm),
+        _EditModeButton(
+          icon: Icons.edit_note_outlined,
+          label: "Tahrirlash (masofadan)",
+          subtitle: "Subsidiya, investitsiya va h.k. — istalgan joydan",
+          onPressed: plantation.id == null
+              ? null
+              : () => context.go(
+                    "${AppRouteNames.home}${AppRouteNames.editRemotePage}",
+                    extra: plantation.id,
+                  ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        FilledButton.tonalIcon(
+          onPressed: plantation.id == null
+              ? null
+              : () => _handleDelete(context, plantation, mapVm),
+          icon: const Icon(Icons.delete_outline, size: 20),
+          label: const Text("O'chirish"),
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(
+              vertical: AppSpacing.lg,
             ),
+            backgroundColor: colorScheme.errorContainer,
+            foregroundColor: colorScheme.onErrorContainer,
           ),
         ),
       ],
@@ -2071,6 +2076,62 @@ class _MapGestureHandlerState extends State<_MapGestureHandler> {
       },
       behavior: HitTestBehavior.translucent,
       child: widget.child,
+    );
+  }
+}
+
+/// Кнопка режима редактирования с подзаголовком, поясняющим её охват —
+/// «Tahrirlash (joyida)» и «Tahrirlash (masofadan)» иначе неотличимы для
+/// юзера без объяснения, какие поля где (см.
+/// docs/superpowers/specs/2026-08-13-remote-edit-design.md).
+class _EditModeButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final VoidCallback? onPressed;
+
+  const _EditModeButton({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return OutlinedButton(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(
+          vertical: AppSpacing.md,
+          horizontal: AppSpacing.lg,
+        ),
+        alignment: Alignment.centerLeft,
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: colorScheme.primary),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                Text(
+                  subtitle,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

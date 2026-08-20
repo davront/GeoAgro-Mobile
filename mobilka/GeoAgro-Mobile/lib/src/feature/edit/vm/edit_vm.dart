@@ -893,7 +893,9 @@ class EditVM extends ChangeNotifier {
               ?.toDouble() ??
           0.0);
     }
-    if ((mahOn && mah <= 0) && (xorOn && xor <= 0) || (!mahOn && !xorOn)) {
+    final mahValid = mahOn && mah > 0;
+    final xorValid = xorOn && xor > 0;
+    if (!mahValid && !xorValid) {
       return "Kamida bitta investitsiya miqdorini kiriting (Mahalliy yoki Xorijiy)";
     }
     // 8) Rasm - динамическая проверка количества фотографий
@@ -908,30 +910,9 @@ class EditVM extends ChangeNotifier {
       return "Kamida bitta meva maydoni qo'shing";
     }
 
-    // 9.1) Shartnoma/qaror: raqam, sana, fayl — uchtasi bir guruh. Birortasi
-    // to'ldirilgan bo'lsa, qolgan ikkitasi ham majburiy. Fayl edit-oqimida
-    // darhol tanlash paytida yuklanadi, shuning uchun submit vaqtida faqat
-    // "allaqachon yuklangan" holatini tekshiramiz.
-    final dealNumberFilled = dealNumberController.text.trim().isNotEmpty;
-    final dealDateFilled = dealDate != null;
-    final dealFileFilled = plantationModel.dealFile != null;
-    if (dealNumberFilled || dealDateFilled || dealFileFilled) {
-      if (!dealNumberFilled) return "Shartnoma raqami kiritilmagan";
-      if (!dealDateFilled) return "Shartnoma sanasi tanlanmagan";
-      if (!dealFileFilled) return "Shartnoma fayli yuklanmagan";
-    }
-
-    final resolutionNumberFilled =
-        resolutionNumberController.text.trim().isNotEmpty;
-    final resolutionDateFilled = resolutionDate != null;
-    final resolutionFileFilled = plantationModel.resolutionFile != null;
-    if (resolutionNumberFilled ||
-        resolutionDateFilled ||
-        resolutionFileFilled) {
-      if (!resolutionNumberFilled) return "Qaror raqami kiritilmagan";
-      if (!resolutionDateFilled) return "Qaror sanasi tanlanmagan";
-      if (!resolutionFileFilled) return "Qaror fayli yuklanmagan";
-    }
+    // 9.1) Shartnoma/qaror group-check — умерено shared хелпер (см. ниже).
+    final dealResolutionError = _validateDealResolutionGroups();
+    if (dealResolutionError != null) return dealResolutionError;
 
     // 10) Проверка разницы между площадью полигона (chegaraArea) и общей площадью плантации (не более 15%)
     final polygonArea =
@@ -952,6 +933,68 @@ class EditVM extends ChangeNotifier {
     }
 
     return null;
+  }
+
+  /// Shartnoma/qaror: raqam, sana, fayl — uchtasi bir guruh. Birortasi
+  /// to'ldirilgan bo'lsa, qolgan ikkitasi ham majburiy. Fayl darhol tanlash
+  /// paytida yuklanadi, shuning uchun bu yerda faqat "allaqachon yuklangan"
+  /// holatini tekshiramiz. Umumiy validateFields() va validateRemoteFields()
+  /// uchun bitta joyda — ikkalasida ham bir xil qoida.
+  String? _validateDealResolutionGroups() {
+    final dealNumberFilled = dealNumberController.text.trim().isNotEmpty;
+    final dealDateFilled = dealDate != null;
+    final dealFileFilled = plantationModel.dealFile != null;
+    if (dealNumberFilled || dealDateFilled || dealFileFilled) {
+      if (!dealNumberFilled) return "Shartnoma raqami kiritilmagan";
+      if (!dealDateFilled) return "Shartnoma sanasi tanlanmagan";
+      if (!dealFileFilled) return "Shartnoma fayli yuklanmagan";
+    }
+
+    final resolutionNumberFilled =
+        resolutionNumberController.text.trim().isNotEmpty;
+    final resolutionDateFilled = resolutionDate != null;
+    final resolutionFileFilled = plantationModel.resolutionFile != null;
+    if (resolutionNumberFilled ||
+        resolutionDateFilled ||
+        resolutionFileFilled) {
+      if (!resolutionNumberFilled) return "Qaror raqami kiritilmagan";
+      if (!resolutionDateFilled) return "Qaror sanasi tanlanmagan";
+      if (!resolutionFileFilled) return "Qaror fayli yuklanmagan";
+    }
+    return null;
+  }
+
+  /// Валидация для EditRemotePage — только административные поля (см.
+  /// docs/superpowers/specs/2026-08-13-remote-edit-design.md). Физические
+  /// проверки (тип земли, площадь, состав насаждений, фото, polygon%) сюда
+  /// намеренно не входят — этих полей просто нет в дереве remote-экрана.
+  String? validateRemoteFields(WidgetRef ref) {
+    if (konturNumbers.isEmpty) {
+      return "Kamida bitta kontur raqamini kiriting";
+    }
+
+    final mahOn = ref.read(switchInvestmentMahhalliy);
+    final xorOn = ref.read(switchInvestmentXorjiy);
+    double mah = 0.0, xor = 0.0;
+    if (mahOn) {
+      mah = (int.tryParse(investmentMahhalliyAmount.text
+                  .replaceAll(RegExp(r'[^0-9]'), ''))
+              ?.toDouble() ??
+          0.0);
+    }
+    if (xorOn) {
+      xor = (int.tryParse(investmentXorijiyAmount.text
+                  .replaceAll(RegExp(r'[^0-9]'), ''))
+              ?.toDouble() ??
+          0.0);
+    }
+    final mahValid = mahOn && mah > 0;
+    final xorValid = xorOn && xor > 0;
+    if (!mahValid && !xorValid) {
+      return "Kamida bitta investitsiya miqdorini kiriting (Mahalliy yoki Xorijiy)";
+    }
+
+    return _validateDealResolutionGroups();
   }
 
   int calculateMinimumPhotosRequired(WidgetRef ref) {
@@ -1183,6 +1226,110 @@ class EditVM extends ChangeNotifier {
         } catch (enqueueError) {
           debugPrint(
               'editPlantation: enqueue after network error failed: $enqueueError');
+        }
+        errorMessage = e.toString().contains('TimeoutException')
+            ? "Серверга уланиш вақти тугади"
+            : "Интернет алокасида хатолик юз берди";
+      } else {
+        errorMessage = "Xatolik yuz berdi: ${e.toString()}";
+      }
+      return false;
+    } finally {
+      isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  /// Сохранение административных полей (субсидии/инвестиции/резервуары/
+  /// шпалеры/год основания/kontur/сделка/постановление) без GPS-проверки —
+  /// см. docs/superpowers/specs/2026-08-13-remote-edit-design.md. Копия
+  /// editPlantation() без шагов 1-2 (GPS-фикс и _checkLocationLimit):
+  /// вызывается только из EditRemotePage, где в дереве нет виджетов для
+  /// площади/типа земли/фото — физические поля физически не могут попасть
+  /// в _buildPatchBody() из этого экрана.
+  Future<bool> editPlantationRemote(WidgetRef ref, int id) async {
+    if (isSaving) {
+      debugPrint(
+          'editPlantationRemote: Already in progress, ignoring duplicate call');
+      return false;
+    }
+
+    errorMessage = null;
+    erroredField = null;
+    isSaving = true;
+    notifyListeners();
+
+    final body = _buildPatchBody(ref);
+    try {
+      debugPrint('[edit-remote] PATCH body => ${jsonEncode(body)}');
+    } catch (e) {
+      debugPrint('⚠️ EditVM: PATCH body debug print failed: $e');
+    }
+
+    if (body.isEmpty) {
+      isSaving = false;
+      notifyListeners();
+      return true;
+    }
+
+    // Нет user_location — точка не собиралась, GPS в этом флоу не
+    // запрашивается вовсе.
+    final isOnline = await NetworkUtils.hasInternetConnection();
+    if (!isOnline) {
+      try {
+        await ref.read(uploadQueueServiceProvider).enqueueEdit(
+              plantationId: id,
+              farmerId: 0,
+              displayLabel: "Plantatsiya #$id",
+              requestBody: body,
+              userLocation: null,
+            );
+        errorMessage = "Tarmoq yo'q — navbatga qo'yildi, ulanish "
+            "tiklanganda avtomatik yuboriladi";
+        isSaving = false;
+        notifyListeners();
+        return true;
+      } catch (e) {
+        debugPrint('editPlantationRemote: enqueue (offline) failed: $e');
+        errorMessage = "Internet bilan bog'liq muammo yuzaga keldi.";
+        isSaving = false;
+        notifyListeners();
+        return false;
+      }
+    }
+
+    try {
+      final response =
+          await _appRepositoryImpl.editPlantation(id: id, body: body);
+
+      if (response.statusCode == 403) {
+        errorMessage = "Sizga ruxsat berilmagan";
+        return false;
+      }
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return true;
+      } else {
+        debugPrint('[edit-remote] Error response data: ${response.data}');
+        errorMessage = ApiErrorParser.parse(response.data);
+        erroredField = ApiErrorParser.parseFieldName(response.data);
+        return false;
+      }
+    } catch (e) {
+      if (isNetworkError(e)) {
+        try {
+          await ref.read(uploadQueueServiceProvider).enqueueEdit(
+                plantationId: id,
+                farmerId: 0,
+                requestBody: body,
+                userLocation: null,
+              );
+          errorMessage = "Tarmoq uzildi — navbatga qo'yildi, ulanish "
+              "tiklanganda avtomatik yuboriladi";
+          return true;
+        } catch (enqueueError) {
+          debugPrint(
+              'editPlantationRemote: enqueue after network error failed: $enqueueError');
         }
         errorMessage = e.toString().contains('TimeoutException')
             ? "Серверга уланиш вақти тугади"

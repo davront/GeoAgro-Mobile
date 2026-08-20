@@ -22,6 +22,9 @@ final class AppRouteNames {
 
   // Home -> Description Plantation
   static const String editPage = "editPage";
+  // Home -> Description Plantation -> Remote edit (без GPS, только
+  // административные поля — см. docs/superpowers/specs/2026-08-13-remote-edit-design.md)
+  static const String editRemotePage = "editRemotePage";
 
   // Home -> Farmer -> Map -> Create Plannation -> View Plantation
   static const String googleMaps = "googleMaps";

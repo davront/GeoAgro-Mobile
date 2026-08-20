@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../feature/fermers/view/pages/farmer_plantations_page.dart';
 import '../../feature/fermers/view/pages/test_plantations_page.dart';
 import '../../feature/edit/view/page/edit_page.dart';
+import '../../feature/edit/view/page/edit_remote_page.dart';
 import '../setting/setup.dart';
 import '../../feature/page/blocked_page.dart';
 import '../../feature/home/view/pages/home_page.dart';
@@ -259,6 +260,17 @@ final class RouterConfigService {
                 context,
                 state,
                 EditPage(
+                  id: state.extra as int,
+                )),
+          ),
+
+          // Plantation Remote Edit page (без GPS, только административные поля)
+          GoRoute(
+            path: AppRouteNames.editRemotePage,
+            pageBuilder: (context, state) => customEachTransitionAnimation(
+                context,
+                state,
+                EditRemotePage(
                   id: state.extra as int,
                 )),
           ),

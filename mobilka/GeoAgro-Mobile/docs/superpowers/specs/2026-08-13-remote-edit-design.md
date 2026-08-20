@@ -30,17 +30,26 @@
 - `land_type` (тип земли)
 - `empty_area`, `not_usable_area` (площади)
 - `fruit_areas`, `types`/`plantation_type` (состав насаждений)
+- `irrigation_area`, `irrigation_systems_count` (орошение/tomchi)
+- `trellises` (шпалеры)
+- `reservoirs` (резервуары)
 - фото плантации
+
+> `calculateMinimumPhotosRequired()` (`edit_vm.dart`) требует доп. фото за
+> включённые tomchi/trellis/reservoir-переключатели — раз фото = физическое
+> присутствие, эти три поля переехали из «masofadan» сюда (изначально были
+> отнесены неверно).
 
 **«Masofadan» (административные, не требуют присутствия):**
 - `subsidies` (субсидии)
 - `investments` (инвестиции: местные/зарубежные)
-- `irrigation_area`, `irrigation_systems_count` (орошение/tomchi)
-- `trellises` (шпалеры)
-- `reservoirs` (резервуары)
 - `garden_established_year` (год основания)
 - `kontur_number`
 - `fertility_score`, `is_fertile`
+- `deal_number`, `deal_date`, `deal_file` (документы сделки)
+- `resolution_number`, `resolution_date`, `resolution_file` (документы постановления)
+
+> Добавлены после 13.08 — не в исходной версии спеки.
 
 ## Подход
 
