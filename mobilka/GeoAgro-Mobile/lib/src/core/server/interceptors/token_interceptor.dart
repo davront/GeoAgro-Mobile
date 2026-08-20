@@ -67,7 +67,19 @@ class TokenInterceptor extends Interceptor {
           log("Auth error message detected in response. Redirecting to login...");
           await _clearSessionAndRedirectToLogin(
               "Redirected to login page from response");
-          // Don't process the response further
+          // Обязательно завершаем handler — иначе Future исходного запроса
+          // никогда не резолвится/реджектится, и любой await на нём (в т.ч.
+          // getUserInfo() внутри setup() на cold start) виснет навсегда,
+          // App.run() не вызывается — чёрный экран без единой ошибки в
+          // логах, пока юзер не убьёт процесс вручную.
+          handler.reject(
+            DioException(
+              requestOptions: response.requestOptions,
+              response: response,
+              type: DioExceptionType.badResponse,
+              error: 'Session expired',
+            ),
+          );
           return;
         }
       }
@@ -206,8 +218,10 @@ class TokenInterceptor extends Interceptor {
     if (shouldRedirectToLogin || isAuthError) {
       log("Authentication error detected. Clearing tokens and redirecting to login...");
       await _clearSessionAndRedirectToLogin("Redirected to login page");
-      // Don't rethrow the error, just handle it silently
-      // This prevents showing server error messages to the user
+      // Обязательно завершаем handler тем же исключением — без этого
+      // Future исходного запроса виснет навсегда (см. тот же паттерн в
+      // onResponse выше).
+      handler.reject(err);
       return;
     }
 
