@@ -959,6 +959,96 @@ class AppRepositoryImpl implements AppRepo {
     }
   }
 
+  // ==== Tasks ====
+  @override
+  Future<String?> getTasks({
+    int page = 1,
+    List<String>? statuses,
+    bool? overdue,
+    String? search,
+    int? executor,
+  }) async {
+    _clearError();
+    try {
+      return await ApiService.get(
+        ApiConst.apiTasks,
+        ApiParams.tasksListParams(
+          page: page,
+          statuses: statuses,
+          overdue: overdue,
+          search: search,
+          executor: executor,
+        ),
+      );
+    } on DioException catch (e) {
+      debugPrint("getTasks error: ${e.response?.data ?? e.message}");
+      _recordError(e);
+    } catch (e) {
+      debugPrint("getTasks unexpected error: $e");
+      _recordError(e);
+    }
+    return null;
+  }
+
+  @override
+  Future<String?> getTaskDetail({required int id}) async {
+    _clearError();
+    try {
+      return await ApiService.get(
+          ApiConst.apiTaskById(id), ApiParams.emptyParams());
+    } on DioException catch (e) {
+      debugPrint("getTaskDetail error: ${e.response?.data ?? e.message}");
+      _recordError(e);
+    } catch (e) {
+      debugPrint("getTaskDetail unexpected error: $e");
+      _recordError(e);
+    }
+    return null;
+  }
+
+  @override
+  Future<String?> getTasksStats({
+    List<String>? statuses,
+    bool? overdue,
+    String? search,
+    int? executor,
+  }) async {
+    _clearError();
+    try {
+      return await ApiService.get(
+        ApiConst.apiTasksStats,
+        ApiParams.tasksListParams(
+          statuses: statuses,
+          overdue: overdue,
+          search: search,
+          executor: executor,
+        ),
+      );
+    } on DioException catch (e) {
+      debugPrint("getTasksStats error: ${e.response?.data ?? e.message}");
+      _recordError(e);
+    } catch (e) {
+      debugPrint("getTasksStats unexpected error: $e");
+      _recordError(e);
+    }
+    return null;
+  }
+
+  /// Смена статуса возвращает [ApiResponse], а не JSON-строку: на 400/403
+  /// бэкенд присылает тело с готовым текстом ошибки по полям
+  /// (`status`/`comment`/`detail`), его показываем пользователю.
+  @override
+  Future<ApiResponse> changeTaskStatus({
+    required int id,
+    required String status,
+    String? comment,
+  }) async {
+    _clearError();
+    final body = <String, dynamic>{"status": status};
+    if (comment != null && comment.isNotEmpty) body["comment"] = comment;
+    return ApiService.post(ApiConst.apiTaskStatus(id), body);
+  }
+
   // ==== Users ====
   @override
   Future<String?> getUserById({required int id}) async {

@@ -6,6 +6,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 
+import '../../../../../localization/app_strings.dart';
 import '../../../../core/routes/app_route_names.dart';
 import '../../../../core/queue/upload_queue_provider.dart';
 import '../../../../core/setting/interited_remote_notifair.dart';
@@ -20,6 +21,7 @@ import '../../../fermers/view/pages/fermers_page.dart'
 import '../../../fermers/view/pages/farmers_statistics_page.dart'
     show FarmersStatisticsPage, farmersStatisticsVM;
 import '../../../profile/view/pages/profile_settings_page.dart';
+import '../../../tasks/view/pages/tasks_page.dart' show TasksPage, tasksVM;
 import '../widgets/home_page_floataction_button_widget.dart';
 import '../widgets/home_drower.dart';
 import '../widgets/home_page_card_widget.dart';
@@ -98,8 +100,17 @@ class _HomePageState extends ConsumerState<HomePage> {
           vm.getPlantationsModel(isLoadMore: false);
         }
         ref.read(notificationsVM).loadUnreadCount();
+        // Только счётчики — чтобы бейдж на вкладке задач был виден до того,
+        // как пользователь туда зайдёт. Сам список грузится по заходу.
+        ref.read(tasksVM).loadStats();
         break;
-      case 1: // Фермеры
+      case 1: // Задачи
+        final tasksVm = ref.read(tasksVM);
+        if (tasksVm.tasks.isEmpty && !tasksVm.isLoading) {
+          tasksVm.load();
+        }
+        break;
+      case 2: // Фермеры
         final fermerVm = ref.read(fermerPageVM);
         if (fermerVm.fermersList.isEmpty &&
             !fermerVm.isLoading &&
@@ -107,13 +118,13 @@ class _HomePageState extends ConsumerState<HomePage> {
           fermerVm.getFermers(isLoadMore: false);
         }
         break;
-      case 2: // Статистика
+      case 3: // Статистика
         final statsVm = ref.read(farmersStatisticsVM);
         if (statsVm.statistics == null && !statsVm.isLoading) {
           statsVm.initialize();
         }
         break;
-      case 3: // Профиль
+      case 4: // Профиль
         // Профиль загружает данные при первом построении виджета
         break;
     }
@@ -134,28 +145,46 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.dispose();
   }
 
-  static const List<NavigationDestination> _navDestinations = [
-    NavigationDestination(
-      icon: Icon(Icons.home_outlined),
-      selectedIcon: Icon(Icons.home_rounded),
-      label: "Uy",
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.agriculture_outlined),
-      selectedIcon: Icon(Icons.agriculture),
-      label: "Fermerlar",
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.bar_chart_outlined),
-      selectedIcon: Icon(Icons.bar_chart),
-      label: "Statistika",
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.person_outline),
-      selectedIcon: Icon(Icons.person),
-      label: "Profil",
-    ),
-  ];
+  /// Не const: на вкладке задач висит бейдж с числом активных задач,
+  /// он приходит из TasksVm.
+  List<NavigationDestination> get _navDestinations {
+    final activeTasks = ref.watch(tasksVM).activeCount;
+    return [
+      const NavigationDestination(
+        icon: Icon(Icons.home_outlined),
+        selectedIcon: Icon(Icons.home_rounded),
+        label: "Uy",
+      ),
+      NavigationDestination(
+        icon: Badge(
+          isLabelVisible: activeTasks > 0,
+          label: Text(activeTasks > 99 ? '99+' : '$activeTasks'),
+          child: const Icon(Icons.assignment_outlined),
+        ),
+        selectedIcon: Badge(
+          isLabelVisible: activeTasks > 0,
+          label: Text(activeTasks > 99 ? '99+' : '$activeTasks'),
+          child: const Icon(Icons.assignment),
+        ),
+        label: AppStrings.tasks,
+      ),
+      const NavigationDestination(
+        icon: Icon(Icons.agriculture_outlined),
+        selectedIcon: Icon(Icons.agriculture),
+        label: "Fermerlar",
+      ),
+      const NavigationDestination(
+        icon: Icon(Icons.bar_chart_outlined),
+        selectedIcon: Icon(Icons.bar_chart),
+        label: "Statistika",
+      ),
+      const NavigationDestination(
+        icon: Icon(Icons.person_outline),
+        selectedIcon: Icon(Icons.person),
+        label: "Profil",
+      ),
+    ];
+  }
 
   void _onNavSelect(int index) {
     setState(() {
@@ -171,15 +200,17 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     final tabs = <Widget>[
       _buildContent(vm),
-      _builtTabs.contains(1) ? const FermersPage() : const SizedBox.shrink(),
-      _builtTabs.contains(2)
+      _builtTabs.contains(1) ? const TasksPage() : const SizedBox.shrink(),
+      _builtTabs.contains(2) ? const FermersPage() : const SizedBox.shrink(),
+      _builtTabs.contains(3)
           ? const FarmersStatisticsPage()
           : const SizedBox.shrink(),
-      _builtTabs.contains(3)
+      _builtTabs.contains(4)
           ? const ProfileSettingsPage()
           : const SizedBox.shrink(),
     ];
 
+    final navDestinations = _navDestinations;
     final showSidebar = Responsive.shouldShowSidebar(context);
 
     if (showSidebar) {
@@ -202,7 +233,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               unselectedLabelTextStyle: TextStyle(
                 color: context.colors.textTertiary,
               ),
-              destinations: _navDestinations
+              destinations: navDestinations
                   .map((d) => NavigationRailDestination(
                         icon: d.icon,
                         selectedIcon: d.selectedIcon,
@@ -289,7 +320,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               height: 64.h,
               selectedIndex: _selectedIndex,
               onDestinationSelected: _onNavSelect,
-              destinations: _navDestinations,
+              destinations: navDestinations,
             ),
           ),
         ),

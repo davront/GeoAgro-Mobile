@@ -58,6 +58,12 @@ final class ApiConst {
   static const String apiUsers = "/api/users/";
   static String apiUserById(int id) => "/api/users/$id/";
 
+  // Tasks
+  static const String apiTasks = "/api/tasks/";
+  static const String apiTasksStats = "/api/tasks/stats/";
+  static String apiTaskById(int id) => "/api/tasks/$id/";
+  static String apiTaskStatus(int id) => "/api/tasks/$id/status/";
+
   // Districts breakdown within a region (used to surface only the
   // caller's own district, not the whole region).
   static String apiRegionDistrictsStatistics(int regionId) =>
@@ -109,6 +115,28 @@ final class ApiParams {
 
   static Map<String, dynamic> queryParams(Map<String, String> params) =>
       Map<String, dynamic>.from(params);
+
+  // Tasks — те же параметры принимают и список, и /stats/.
+  // Статусы бэкенд ждёт одной строкой через запятую.
+  static Map<String, dynamic> tasksListParams({
+    int? page,
+    int? pageSize,
+    List<String>? statuses,
+    bool? overdue,
+    String? search,
+    int? executor,
+  }) {
+    final params = <String, dynamic>{};
+    if (page != null && page > 0) params["page"] = page;
+    if (pageSize != null && pageSize > 0) params["page_size"] = pageSize;
+    if (statuses != null && statuses.isNotEmpty) {
+      params["status"] = statuses.join(",");
+    }
+    if (overdue != null) params["overdue"] = overdue;
+    if (search != null && search.isNotEmpty) params["search"] = search;
+    if (executor != null && executor > 0) params["executor"] = executor;
+    return params;
+  }
 
   // Notifications
   static Map<String, dynamic> notificationsListParams(

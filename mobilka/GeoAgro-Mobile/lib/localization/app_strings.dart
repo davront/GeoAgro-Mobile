@@ -136,6 +136,56 @@ class AppStrings {
   static const String notifications = "Xabarnomalar";
   static const String notificationUnread = "O'qilmagan xabarnomalar";
 
+  // ===== TASKS =====
+  static const String tasks = "Vazifalar";
+  static const String taskTitle = "Vazifa";
+  static const String taskNotFound = "Vazifa topilmadi.";
+  static const String taskLoadFailed = "Vazifani yuklab bo'lmadi.";
+  static const String taskStatusUpdated = "Vazifa holati yangilandi";
+  static const String taskStatusChangeFailed =
+      "Vazifa holatini o'zgartirib bo'lmadi.";
+  static const String taskNoPermission = "Bu amal uchun ruxsat yo'q.";
+  static const String tasksEmpty = "Sizga biriktirilgan vazifa yo'q";
+  static const String tasksEmptyFiltered =
+      "Tanlangan filtr bo'yicha vazifa yo'q";
+  static const String tasksClearFilter = "Filtrni tozalash";
+  static const String pullToRefresh =
+      "Ma'lumotlarni yangilash uchun pastga torting";
+  static const String taskOverdue = "Muddati o'tgan";
+  static const String taskDeadline = "Muddat";
+  static const String taskAssignedBy = "Topshirdi";
+  static const String taskDistrict = "Tuman";
+  static const String taskCreatedAt = "Yaratilgan";
+  static const String taskStartedAt = "Boshlangan";
+  static const String taskCompletedAt = "Topshirilgan";
+  static const String taskReviewedAt = "Tekshirilgan";
+  static const String taskDescription = "Topshiriq";
+  static const String taskResultComment = "Bajaruvchi izohi";
+  static const String taskReviewComment = "Tekshiruvchi izohi";
+  static const String taskFile = "Ilova qilingan fayl";
+  static const String taskFileOpen = "Ochish";
+  static const String taskFileOpenFailed = "Faylni ochib bo'lmadi";
+  static const String taskComment = "Izoh";
+  static const String taskCommentRequired = "Izoh *";
+  static const String taskCommentHint = "Nima qilinganini yozing";
+  static const String taskCommentEmptyError = "Bajarilgan ish haqida yozing.";
+  static const String taskCommentSend = "Yuborish";
+  static const String taskPlantationArea = "Maydon";
+  static const String taskPlantationModeration = "Moderatsiya";
+  static String taskPlantationNumber(int id) => "Plantatsiya № $id";
+
+  // Task statuses
+  static const String taskStatusNew = "Yangi";
+  static const String taskStatusInProgress = "Ishda";
+  static const String taskStatusDone = "Bajarildi, tekshirilmoqda";
+  static const String taskStatusAccepted = "Qabul qilindi";
+  static const String taskStatusRejected = "Qaytarildi";
+
+  // Task actions
+  static const String taskActionStart = "Ishni boshlash";
+  static const String taskActionSubmit = "Topshirish";
+  static const String taskActionResume = "Ishni davom ettirish";
+
   // ===== EMPTY STATES =====
   static const String emptyStateNoData = "Ma'lumot topilmadi";
   static const String emptyStateNoResults = "Natijalar topilmadi";

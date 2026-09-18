@@ -24,6 +24,7 @@ import '../../feature/google_map/view/pages/plantation_map_view_page.dart';
 import '../../feature/fermers/view/pages/farmers_statistics_page.dart';
 import '../../feature/profile/view/pages/devices_page.dart';
 import '../../feature/queue/view/pages/queue_screen.dart';
+import '../../feature/tasks/view/pages/task_detail_page.dart';
 import 'app_route_names.dart';
 import '../../../dev/dev_menu_page.dart';
 
@@ -273,6 +274,16 @@ final class RouterConfigService {
                 EditRemotePage(
                   id: state.extra as int,
                 )),
+          ),
+
+          // Task detail (список задач — вкладка на home)
+          GoRoute(
+            path: AppRouteNames.taskDetail,
+            pageBuilder: (context, state) => customEachTransitionAnimation(
+              context,
+              state,
+              TaskDetailPage(taskId: state.extra as int),
+            ),
           ),
 
           // Offline upload queue

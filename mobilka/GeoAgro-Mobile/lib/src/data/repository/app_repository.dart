@@ -98,4 +98,25 @@ abstract class AppRepo {
 
   // ==== Users ====
   Future<String?> getUserById({required int id});
+
+  // ==== Tasks ====
+  Future<String?> getTasks({
+    int page = 1,
+    List<String>? statuses,
+    bool? overdue,
+    String? search,
+    int? executor,
+  });
+  Future<String?> getTaskDetail({required int id});
+  Future<String?> getTasksStats({
+    List<String>? statuses,
+    bool? overdue,
+    String? search,
+    int? executor,
+  });
+  Future<ApiResponse> changeTaskStatus({
+    required int id,
+    required String status,
+    String? comment,
+  });
 }

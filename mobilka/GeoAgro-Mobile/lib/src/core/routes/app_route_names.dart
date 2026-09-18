@@ -38,4 +38,7 @@ final class AppRouteNames {
   static const String farmersStatistics = "farmersStatistics";
   static const String devices = "devices";
   static const String uploadQueue = "uploadQueue";
+
+  // Home -> Tasks (список — вкладка на home, карточка — отдельный экран)
+  static const String taskDetail = "taskDetail";
 }
