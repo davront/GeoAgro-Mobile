@@ -28,6 +28,31 @@ String? _asText(dynamic value) {
   return null;
 }
 
+bool _asBool(dynamic value) {
+  if (value is bool) return value;
+  if (value is num) return value != 0;
+  if (value is String) {
+    final lower = value.toLowerCase();
+    return lower == 'true' || lower == '1';
+  }
+  return false;
+}
+
+Map<String, dynamic>? _asMap(dynamic value) {
+  if (value is Map<String, dynamic>) return value;
+  if (value is Map) return Map<String, dynamic>.from(value);
+  return null;
+}
+
+List<TaskListItem> _itemsFrom(dynamic raw) {
+  if (raw is! List) return const [];
+  return raw
+      .map(_asMap)
+      .whereType<Map<String, dynamic>>()
+      .map(TaskListItem.fromJson)
+      .toList();
+}
+
 class TaskUserRef {
   final int id;
   final String username;
@@ -96,7 +121,7 @@ class TaskPlantationRef {
         id: _asInt(json['id']) ?? 0,
         districtName: _asText(json['district_name']),
         moderationStatus: _asText(json['moderation_status']),
-        isRejected: json['is_rejected'] as bool? ?? false,
+        isRejected: _asBool(json['is_rejected']),
         totalArea: _asDouble(json['total_area']),
       );
 }
@@ -128,11 +153,11 @@ class TaskListItem {
 
   factory TaskListItem.fromJson(Map<String, dynamic> json) => TaskListItem(
         id: _asInt(json['id']) ?? 0,
-        title: json['title'] as String? ?? '',
+        title: _asText(json['title']) ?? '',
         status:
-            TaskStatus.fromApi(json['status'] as String?) ?? TaskStatus.newTask,
+            TaskStatus.fromApi(json['status']?.toString()) ?? TaskStatus.newTask,
         deadline: _asDate(json['deadline']),
-        isOverdue: json['is_overdue'] as bool? ?? false,
+        isOverdue: _asBool(json['is_overdue']),
         createdAt: _asDate(json['created_at']),
         assigner: _userOrNull(json['assigner']),
         executor: _userOrNull(json['executor']),
@@ -183,19 +208,20 @@ class TaskDetail extends TaskListItem {
     final plantationRaw = json['plantation'];
     return TaskDetail(
       id: _asInt(json['id']) ?? 0,
-      title: json['title'] as String? ?? '',
+      title: _asText(json['title']) ?? '',
       status:
-          TaskStatus.fromApi(json['status'] as String?) ?? TaskStatus.newTask,
+          TaskStatus.fromApi(json['status']?.toString()) ?? TaskStatus.newTask,
       deadline: _asDate(json['deadline']),
-      isOverdue: json['is_overdue'] as bool? ?? false,
+      isOverdue: _asBool(json['is_overdue']),
       createdAt: _asDate(json['created_at']),
       assigner: _userOrNull(json['assigner']),
       executor: _userOrNull(json['executor']),
       district: _districtOrNull(json['district']),
       plantationId: plantationIdFrom(plantationRaw),
-      plantation: plantationRaw is Map<String, dynamic>
-          ? TaskPlantationRef.fromJson(plantationRaw)
-          : null,
+      plantation: () {
+        final map = _asMap(plantationRaw);
+        return map == null ? null : TaskPlantationRef.fromJson(map);
+      }(),
       description: _asText(json['description']),
       file: _asText(json['file']),
       resultComment: _asText(json['result_comment']),
@@ -224,18 +250,28 @@ class TasksListResponse {
   });
 
   factory TasksListResponse.fromJson(Map<String, dynamic> json) {
-    final raw = json['results'];
+    final results = _itemsFrom(json['results']);
     return TasksListResponse(
-      count: _asInt(json['count']) ?? 0,
+      count: _asInt(json['count']) ?? results.length,
       next: _asText(json['next']),
       previous: _asText(json['previous']),
-      results: raw is List
-          ? raw
-              .whereType<Map<String, dynamic>>()
-              .map(TaskListItem.fromJson)
-              .toList()
-          : const [],
+      results: results,
     );
+  }
+
+  /// Список может прийти DRF-конвертом `{count, results}` или голым массивом.
+  /// Любой другой тип (null, строка, число) — пустой список, без TypeError:
+  /// иначе экран рисует «неожиданную ошибку» при фактически пустых задачах.
+  factory TasksListResponse.fromDecoded(dynamic decoded) {
+    if (decoded is List) {
+      final results = _itemsFrom(decoded);
+      return TasksListResponse(count: results.length, results: results);
+    }
+    final json = _asMap(decoded);
+    if (json == null) {
+      return const TasksListResponse(count: 0, results: []);
+    }
+    return TasksListResponse.fromJson(json);
   }
 
   bool get hasNext => next != null;
@@ -251,6 +287,18 @@ class TaskStats {
     required this.overdue,
     required this.byStatus,
   });
+
+  factory TaskStats.fromDecoded(dynamic decoded) {
+    final json = _asMap(decoded);
+    if (json == null) {
+      return TaskStats(
+        total: 0,
+        overdue: 0,
+        byStatus: {for (final status in TaskStatus.values) status: 0},
+      );
+    }
+    return TaskStats.fromJson(json);
+  }
 
   factory TaskStats.fromJson(Map<String, dynamic> json) {
     final raw = json['by_status'];
@@ -279,8 +327,12 @@ int? plantationIdFrom(dynamic value) {
   return _asInt(value);
 }
 
-TaskUserRef? _userOrNull(dynamic value) =>
-    value is Map<String, dynamic> ? TaskUserRef.fromJson(value) : null;
+TaskUserRef? _userOrNull(dynamic value) {
+  final json = _asMap(value);
+  return json == null ? null : TaskUserRef.fromJson(json);
+}
 
-TaskDistrictRef? _districtOrNull(dynamic value) =>
-    value is Map<String, dynamic> ? TaskDistrictRef.fromJson(value) : null;
+TaskDistrictRef? _districtOrNull(dynamic value) {
+  final json = _asMap(value);
+  return json == null ? null : TaskDistrictRef.fromJson(json);
+}

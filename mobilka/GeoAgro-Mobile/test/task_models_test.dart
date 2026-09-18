@@ -92,6 +92,50 @@ void main() {
       expect(response.results, isEmpty);
       expect(response.hasNext, isFalse);
     });
+
+    test('голый массив не роняет разбор — это пустой список, не ошибка экрана',
+        () {
+      final empty = TasksListResponse.fromDecoded(<dynamic>[]);
+      expect(empty.results, isEmpty);
+      expect(empty.hasNext, isFalse);
+
+      final withItem = TasksListResponse.fromDecoded([
+        {
+          "id": 1,
+          "title": "X",
+          "status": "new",
+          "is_overdue": 0,
+        }
+      ]);
+      expect(withItem.results, hasLength(1));
+      expect(withItem.results.first.isOverdue, isFalse);
+      expect(withItem.count, 1);
+    });
+
+    test('null и строка — пустой список, без TypeError', () {
+      expect(TasksListResponse.fromDecoded(null).results, isEmpty);
+      expect(TasksListResponse.fromDecoded("not json object").results, isEmpty);
+    });
+  });
+
+  group('TaskListItem casts', () {
+    test('is_overdue как 0/1 не роняет карточку', () {
+      final overdue = TaskListItem.fromJson({
+        "id": 1,
+        "title": "X",
+        "status": "new",
+        "is_overdue": 1,
+      });
+      expect(overdue.isOverdue, isTrue);
+
+      final ok = TaskListItem.fromJson({
+        "id": 2,
+        "title": "Y",
+        "status": "new",
+        "is_overdue": 0,
+      });
+      expect(ok.isOverdue, isFalse);
+    });
   });
 
   group('TaskDetail', () {

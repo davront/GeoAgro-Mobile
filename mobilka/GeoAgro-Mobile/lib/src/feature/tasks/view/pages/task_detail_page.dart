@@ -56,11 +56,13 @@ class _TaskDetailPageState extends ConsumerState<TaskDetailPage> {
       if (comment == null) return;
     }
 
-    final error = await vm.apply(action, comment: comment);
+    final result = await vm.apply(action, comment: comment);
     if (!mounted) return;
 
-    if (error != null) {
-      AppSnackBar.error(context, message: error);
+    if (result.ignored) return;
+
+    if (result.errorMessage != null) {
+      AppSnackBar.error(context, message: result.errorMessage!);
       return;
     }
 
@@ -148,7 +150,11 @@ class _TaskDetailPageState extends ConsumerState<TaskDetailPage> {
                     ],
                     if (task.plantation != null) ...[
                       12.verticalSpace,
-                      _PlantationCard(plantation: task.plantation!),
+                      _PlantationCard(
+                        plantation: task.plantation!,
+                        onEdited: () =>
+                            ref.read(taskDetailVM(widget.taskId)).load(),
+                      ),
                     ],
                     if (task.resultComment != null) ...[
                       12.verticalSpace,
@@ -270,8 +276,9 @@ class _InfoCard extends StatelessWidget {
 
 class _PlantationCard extends StatelessWidget {
   final TaskPlantationRef plantation;
+  final VoidCallback? onEdited;
 
-  const _PlantationCard({required this.plantation});
+  const _PlantationCard({required this.plantation, this.onEdited});
 
   @override
   Widget build(BuildContext context) {
@@ -301,6 +308,29 @@ class _PlantationCard extends StatelessWidget {
             _Row(
                 label: AppStrings.taskPlantationModeration,
                 value: plantation.moderationStatus!),
+          if (plantation.isRejected) ...[
+            8.verticalSpace,
+            Text(
+              AppStrings.taskMustResubmitPlantation,
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: context.colors.textSecondary,
+              ),
+            ),
+          ],
+          8.verticalSpace,
+          AppButton(
+            text: AppStrings.taskEditOnSite,
+            isFullWidth: true,
+            icon: Icons.edit_location_alt_outlined,
+            onPressed: () async {
+              await context.push(
+                "${AppRouteNames.home}${AppRouteNames.editPage}",
+                extra: plantation.id,
+              );
+              onEdited?.call();
+            },
+          ),
           8.verticalSpace,
           AppButtonOutlined(
             text: AppStrings.mapViewPlantation,

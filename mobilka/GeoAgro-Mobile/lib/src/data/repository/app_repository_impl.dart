@@ -970,7 +970,7 @@ class AppRepositoryImpl implements AppRepo {
   }) async {
     _clearError();
     try {
-      return await ApiService.get(
+      final data = await ApiService.get(
         ApiConst.apiTasks,
         ApiParams.tasksListParams(
           page: page,
@@ -980,6 +980,9 @@ class AppRepositoryImpl implements AppRepo {
           executor: executor,
         ),
       );
+      debugPrint(
+          "getTasks response: ${data == null ? 'null (not 200)' : '${data.length} chars'}");
+      return data;
     } on DioException catch (e) {
       debugPrint("getTasks error: ${e.response?.data ?? e.message}");
       _recordError(e);
@@ -1042,10 +1045,17 @@ class AppRepositoryImpl implements AppRepo {
     required int id,
     required String status,
     String? comment,
+    Map<String, double>? userLocation,
   }) async {
     _clearError();
     final body = <String, dynamic>{"status": status};
     if (comment != null && comment.isNotEmpty) body["comment"] = comment;
+    if (userLocation != null) {
+      body["user_location"] = {
+        "latitude": userLocation["latitude"],
+        "longitude": userLocation["longitude"],
+      };
+    }
     return ApiService.post(ApiConst.apiTaskStatus(id), body);
   }
 

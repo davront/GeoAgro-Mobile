@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../localization/app_strings.dart';
@@ -74,14 +75,14 @@ class TasksVm extends ChangeNotifier {
         errorMessage =
             AppRepositoryImpl.lastErrorMessage ?? AppStrings.networkError;
       } else {
-        final response = TasksListResponse.fromJson(
-            jsonDecode(data) as Map<String, dynamic>);
+        final response = TasksListResponse.fromDecoded(jsonDecode(data));
         if (!isLoadMore) tasks.clear();
         tasks.addAll(response.results);
         canLoadNext = response.hasNext;
         _page++;
       }
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('getTasks parse/load error: $e\n$stack');
       errorMessage = DioErrorUtils.messageFromAny(e);
     } finally {
       isLoading = false;
@@ -112,7 +113,7 @@ class TasksVm extends ChangeNotifier {
       final data =
           await _repo.getTasksStats(overdue: overdue, executor: userId);
       if (data == null) return null;
-      return TaskStats.fromJson(jsonDecode(data) as Map<String, dynamic>);
+      return TaskStats.fromDecoded(jsonDecode(data));
     } catch (_) {
       return null;
     }

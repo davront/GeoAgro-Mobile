@@ -118,5 +118,6 @@ abstract class AppRepo {
     required int id,
     required String status,
     String? comment,
+    Map<String, double>? userLocation,
   });
 }

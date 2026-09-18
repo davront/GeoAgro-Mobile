@@ -9,7 +9,8 @@ class AppStrings {
   static const String password = "Parol";
   static const String loginError = "Bunday foydalanuvchi yo'q.";
   static const String serverError = "Server ochib qolgan bo'lishi mumkin.";
-  static const String networkError = "Internet yoki server bilan muammo yuz berdi.";
+  static const String networkError =
+      "Internet yoki server bilan muammo yuz berdi.";
   static const String loginRequired = "Kirish kerak";
 
   // ===== PLANTATION TYPES =====
@@ -17,20 +18,20 @@ class AppStrings {
   static const String bog = "Bog`";
   static const String uzumzor = "Uzumzor";
   static const String issiqxona = "Issiqxona";
-  
+
   // Bog types
   static const String bogIntensiv = "Intensiv";
   static const String bogMahalliy = "Mahalliy";
-  
+
   // Bog subtypes
   static const String bogPakana = "Pakana";
   static const String bogYarimPakana = "Yarim pakana";
-  
+
   // Uzum types
   static const String uzumXoraki = "Xo`raki";
   static const String uzumKishmish = "Kishmish bop";
   static const String uzumSanoat = "Sanoat bop (vino bop)";
-  
+
   // Issiqxona types
   static const String issiqxonaMahalliy = "Mahalliy";
   static const String issiqxonaZamonaviy = "Zamonaviy";
@@ -43,7 +44,8 @@ class AppStrings {
   static const String yerSuvli = "Suvli maydon";
 
   // ===== SUBSIDY TYPES =====
-  static const String subsidiyaTomchilatib = "Tomchilatib sug'orish tizimlari uchun";
+  static const String subsidiyaTomchilatib =
+      "Tomchilatib sug'orish tizimlari uchun";
   static const String subsidiyaQuduq = "Quduq/nasos stantsiyalari uchun";
   static const String subsidiyaKochat = "Ko'chat uchun";
   static const String subsidiyaShpalier = "Shpalier uchun";
@@ -67,23 +69,34 @@ class AppStrings {
 
   // ===== VALIDATION ERRORS =====
   static const String errorRequired = "Bu maydon majburiy";
-  static const String errorTimeNotSelected = "Vaqt tanlanmagan, vaqtni to`ldiring";
-  static const String errorPlantationTypeNotSelected = "Plantatsiya turi tanlanmagan, tanlovni bajaring";
-  static const String errorBogTypeNotSelected = "Bog turi tanlanmagan, tanlovni bajaring";
-  static const String errorUzumTypeNotSelected = "Uzum turi tanlanmagan, tanlovni bajaring";
-  static const String errorIssiqxonaTypeNotSelected = "Issiqxona turi tanlanmagan, tanlovni bajaring";
-  static const String errorYerTypeNotSelected = "Yer turi tanlanmagan, tanlovni bajaring";
-  static const String errorNotUsableAreaInvalid = "Foydalanishga yaroqsiz yerlar noto'g'ri yoki bo'sh, to'ldiring";
-  static const String errorNotUsableAreaNegative = "Foydalanishga yaroqsiz maydon manfiy bo'lishi mumkin emas";
-  static const String errorEmptyAreaInvalid = "Ochiq maydon noto'g'ri yoki bo'sh, to'ldiring";
-  static const String errorEmptyAreaNegative = "Ochiq maydon manfiy bo'lishi mumkin emas";
+  static const String errorTimeNotSelected =
+      "Vaqt tanlanmagan, vaqtni to`ldiring";
+  static const String errorPlantationTypeNotSelected =
+      "Plantatsiya turi tanlanmagan, tanlovni bajaring";
+  static const String errorBogTypeNotSelected =
+      "Bog turi tanlanmagan, tanlovni bajaring";
+  static const String errorUzumTypeNotSelected =
+      "Uzum turi tanlanmagan, tanlovni bajaring";
+  static const String errorIssiqxonaTypeNotSelected =
+      "Issiqxona turi tanlanmagan, tanlovni bajaring";
+  static const String errorYerTypeNotSelected =
+      "Yer turi tanlanmagan, tanlovni bajaring";
+  static const String errorNotUsableAreaInvalid =
+      "Foydalanishga yaroqsiz yerlar noto'g'ri yoki bo'sh, to'ldiring";
+  static const String errorNotUsableAreaNegative =
+      "Foydalanishga yaroqsiz maydon manfiy bo'lishi mumkin emas";
+  static const String errorEmptyAreaInvalid =
+      "Ochiq maydon noto'g'ri yoki bo'sh, to'ldiring";
+  static const String errorEmptyAreaNegative =
+      "Ochiq maydon manfiy bo'lishi mumkin emas";
 
   // ===== FORM LABELS =====
   static const String labelYerTuri = "Yer turi";
   static const String labelNotUsableArea = "Foydalanishga yaroqsiz maydon";
   static const String hintYerTuriNotSelected = "yer turi tanlanmagan";
   static const String hintYerTuriNotSelectedAlt = "yer turini tanlanmagan";
-  static const String hintIssiqxonaTypeNotSelected = "issiqxona turi tanlanmagan";
+  static const String hintIssiqxonaTypeNotSelected =
+      "issiqxona turi tanlanmagan";
   static const String hintUzumTypeNotSelected = "uzumzor turi tanlanmagan";
   static const String hintNotUsableArea = "yaroqsiz maydon kiritilmagan";
 
@@ -98,7 +111,8 @@ class AppStrings {
 
   // ===== MESSAGES =====
   static const String messageUnexpectedError = "Kutilmagan xatolik";
-  static const String messageDataProcessingError = "Ma'lumotlarni qayta ishlashda xatolik yuz berdi.";
+  static const String messageDataProcessingError =
+      "Ma'lumotlarni qayta ishlashda xatolik yuz berdi.";
   static const String messageDeleteRequest = "O'chirish so'rovi";
 
   // ===== HOME PAGE =====
@@ -186,6 +200,20 @@ class AppStrings {
   static const String taskActionSubmit = "Topshirish";
   static const String taskActionResume = "Ishni davom ettirish";
 
+  // Task submit gates (GPS + moderation)
+  static const String taskLocationUnavailable =
+      "Joylashuvni aniqlab bo'lmadi. GPS yoqilganligini tekshiring va "
+      "qayta urinib ko'ring";
+  static String taskTooFarFromPlantation(String limitLabel) =>
+      "Siz plantatsiyaning $limitLabel km radiusida emassiz. "
+      "Topshirish uchun yaqinroq boring";
+  static const String taskMustResubmitPlantation =
+      "Plantatsiya hali rad etilgan. Avval joyida tahrirlang va "
+      "moderatsiyaga qayta yuboring.";
+  static const String taskPlantationNoCoords =
+      "Plantatsiya koordinatalari topilmadi. Avval plantatsiyani ochib tekshiring.";
+  static const String taskEditOnSite = "Tahrirlash (joyida)";
+
   // ===== EMPTY STATES =====
   static const String emptyStateNoData = "Ma'lumot topilmadi";
   static const String emptyStateNoResults = "Natijalar topilmadi";
@@ -196,62 +224,61 @@ class AppLocalizedMaps {
   AppLocalizedMaps._();
 
   static Map<int, String> get plantationTypes => {
-    1: AppStrings.bog,
-    2: AppStrings.uzumzor,
-    3: AppStrings.issiqxona,
-  };
+        1: AppStrings.bog,
+        2: AppStrings.uzumzor,
+        3: AppStrings.issiqxona,
+      };
 
   static Map<int, String> get issiqxonaTypes => {
-    1: AppStrings.issiqxonaMahalliy,
-    2: AppStrings.issiqxonaZamonaviy,
-  };
+        1: AppStrings.issiqxonaMahalliy,
+        2: AppStrings.issiqxonaZamonaviy,
+      };
 
   static Map<int, String> get uzumTypes => {
-    1: AppStrings.uzumXoraki,
-    2: AppStrings.uzumKishmish,
-    3: AppStrings.uzumSanoat,
-  };
+        1: AppStrings.uzumXoraki,
+        2: AppStrings.uzumKishmish,
+        3: AppStrings.uzumSanoat,
+      };
 
   static Map<int, String> get bogTypes => {
-    1: AppStrings.bogIntensiv,
-    2: AppStrings.bogMahalliy,
-  };
+        1: AppStrings.bogIntensiv,
+        2: AppStrings.bogMahalliy,
+      };
 
   static Map<int, String> get bogSubtypes => {
-    1: AppStrings.bogPakana,
-    2: AppStrings.bogYarimPakana,
-  };
+        1: AppStrings.bogPakana,
+        2: AppStrings.bogYarimPakana,
+      };
 
   static Map<int, String> get yerTuri => {
-    1: AppStrings.yerLalmi,
-    2: AppStrings.yerTogoldi,
-    3: AppStrings.yerAdir,
-    4: AppStrings.yerSuvli,
-  };
+        1: AppStrings.yerLalmi,
+        2: AppStrings.yerTogoldi,
+        3: AppStrings.yerAdir,
+        4: AppStrings.yerSuvli,
+      };
 
   static Map<int, String> get subsidyTypes => {
-    1: AppStrings.subsidiyaTomchilatib,
-    2: AppStrings.subsidiyaQuduq,
-    3: AppStrings.subsidiyaKochat,
-    4: AppStrings.subsidiyaShpalier,
-    5: AppStrings.subsidiyaLimon,
-    6: AppStrings.subsidiyaMuqobilenergiya,
-  };
+        1: AppStrings.subsidiyaTomchilatib,
+        2: AppStrings.subsidiyaQuduq,
+        3: AppStrings.subsidiyaKochat,
+        4: AppStrings.subsidiyaShpalier,
+        5: AppStrings.subsidiyaLimon,
+        6: AppStrings.subsidiyaMuqobilenergiya,
+      };
 
   static Map<int, String> get regions => {
-    1: AppStrings.regionTashkent,
-    2: AppStrings.regionAndijan,
-    3: AppStrings.regionBukhara,
-    4: AppStrings.regionFergana,
-    5: AppStrings.regionJizzakh,
-    6: AppStrings.regionKashkadarya,
-    7: AppStrings.regionNavoi,
-    8: AppStrings.regionNamangan,
-    9: AppStrings.regionSamarkand,
-    10: AppStrings.regionSirdarya,
-    11: AppStrings.regionSurkhandarya,
-    12: AppStrings.regionKarakalpakstan,
-    13: AppStrings.regionKhorezm,
-  };
+        1: AppStrings.regionTashkent,
+        2: AppStrings.regionAndijan,
+        3: AppStrings.regionBukhara,
+        4: AppStrings.regionFergana,
+        5: AppStrings.regionJizzakh,
+        6: AppStrings.regionKashkadarya,
+        7: AppStrings.regionNavoi,
+        8: AppStrings.regionNamangan,
+        9: AppStrings.regionSamarkand,
+        10: AppStrings.regionSirdarya,
+        11: AppStrings.regionSurkhandarya,
+        12: AppStrings.regionKarakalpakstan,
+        13: AppStrings.regionKhorezm,
+      };
 }
-
