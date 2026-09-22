@@ -39,7 +39,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyD4gm5IucqyheypHiGZticQCLI6i8ViBlo',
-    appId: '1:408414865595:android:eced412cdc342db4b5019e',
+    appId: '1:408414865595:android:dba64df06d44a096b5019e',
     messagingSenderId: '408414865595',
     projectId: 'geoagro-48cf5',
     storageBucket: 'geoagro-48cf5.firebasestorage.app',

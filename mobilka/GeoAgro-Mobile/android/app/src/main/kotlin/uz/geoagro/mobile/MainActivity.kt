@@ -1,4 +1,4 @@
-package com.example.agro_employee_public
+package uz.geoagro.mobile
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

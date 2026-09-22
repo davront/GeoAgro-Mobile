@@ -265,7 +265,7 @@ class _UpdateRequiredDialogState extends State<UpdateRequiredDialog> {
 
   Future<void> _openUnknownSourcesSettings() async {
     try {
-      const packageName = "com.example.agro_employee_public";
+      const packageName = "uz.geoagro.mobile";
       final intent = AndroidIntent(
         action: 'android.settings.MANAGE_UNKNOWN_APP_SOURCES',
         data: 'package:$packageName',
@@ -275,7 +275,7 @@ class _UpdateRequiredDialogState extends State<UpdateRequiredDialog> {
       // Некоторые OEM-прошивки (или Android < 8, где разрешение вообще
       // не per-app) не поддерживают этот action — открываем общий экран
       // настроек приложения как fallback, юзер сам найдёт нужный пункт.
-      const packageName = "com.example.agro_employee_public";
+      const packageName = "uz.geoagro.mobile";
       final intent = AndroidIntent(
         action: 'android.settings.APPLICATION_DETAILS_SETTINGS',
         data: 'package:$packageName',
