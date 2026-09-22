@@ -1,10 +1,8 @@
-import "dart:io";
 import "dart:async";
 import "dart:convert";
 import "package:l/l.dart";
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
-import "package:dio/io.dart";
 import "package:dio/dio.dart";
 import "package:flutter/foundation.dart";
 import "package:pretty_dio_logger/pretty_dio_logger.dart";
@@ -55,14 +53,6 @@ class ApiService {
           enabled: false, // Disabled - using SecureLoggerInterceptor instead
         ),
     ]);
-
-    // Deprecated bo'lgan onHttpClientCreate o'rniga createHttpClient'dan foydalanamiz
-    (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-      final client = HttpClient();
-      client.badCertificateCallback =
-          (X509Certificate cert, String host, int port) => true;
-      return client;
-    };
 
     return dio;
   }

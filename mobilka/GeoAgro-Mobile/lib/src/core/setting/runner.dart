@@ -4,6 +4,7 @@ import "dart:io";
 import "package:flutter/foundation.dart";
 import "package:flutter/services.dart";
 import "package:firebase_crashlytics/firebase_crashlytics.dart";
+import "package:http/http.dart" show ClientException;
 
 import "setup.dart";
 import "app.dart";
@@ -29,6 +30,11 @@ bool _isBenignError(Object error) {
   // зависимости от того, на каком этапе HTTP-стрима порвалось.
   if (error is SocketException) return true;
 
+  // ClientException (package:http) — тот же оборванный стрим картинки,
+  // но прилетает через http-based image loader (не dart:io напрямую),
+  // например "Connection closed while receiving data".
+  if (error is ClientException) return true;
+
   // google_maps_flutter иногда зовёт hideInfoWindow на markerId,
   // который уже удалён из Set<Marker> (гонка между пересборкой
   // маркеров и открытым InfoWindow) — баг самого плагина, не нашего
@@ -36,6 +42,18 @@ bool _isBenignError(Object error) {
   if (error is PlatformException &&
       error.code == 'Invalid markerId' &&
       (error.message?.contains('hideInfoWindow') ?? false)) {
+    return true;
+  }
+
+  // updateMarkers падает в нативном BitmapFactory.decodeByteArray на
+  // некоторых Android OEM (замечено на vivo) — PNG-байты из
+  // MarkerIconUtils валидны и успешно кодируются на Dart-стороне, но
+  // decode ломается уже в самом Google Maps SDK на устройстве. Ошибка
+  // прилетает из platform channel (updateMarkers), Dart-side try/catch
+  // вокруг генерации иконки её не перехватывает.
+  if (error is PlatformException &&
+      error.code == 'IllegalArgumentException' &&
+      (error.message?.contains('valid image') ?? false)) {
     return true;
   }
 

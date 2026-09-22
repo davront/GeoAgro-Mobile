@@ -1,6 +1,5 @@
 import "dart:developer";
 import "package:dio/dio.dart";
-import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:go_router/go_router.dart";
 import "package:package_info_plus/package_info_plus.dart";
@@ -19,29 +18,12 @@ class TokenInterceptor extends Interceptor {
   @override
   Future<void> onRequest(
       RequestOptions options, RequestInterceptorHandler handler) async {
-    if (kDebugMode) {
-      log(
-        "---------[TokenInterceptor]---------ON_REQUEST(${options.method})------------------\n\n"
-        "URL: ${options.uri}\n"
-        "Headers: ${options.headers}\n"
-        "---------------------------------------------------------------------------\n\n",
-      );
-    }
     super.onRequest(options, handler);
   }
 
   @override
   Future<void> onResponse(
       Response<dynamic> response, ResponseInterceptorHandler handler) async {
-    if (kDebugMode) {
-      log(
-        "---------[TokenInterceptor]---------ON_RESPONSE(${response.statusCode})------------------\n\n"
-        "URL: ${response.realUri}\n"
-        "Data: ${response.data}\n"
-        "---------------------------------------------------------------------------\n\n",
-      );
-    }
-
     // Check for auth-related messages even in successful responses
     final responseData = response.data;
     if (responseData != null) {
@@ -92,19 +74,6 @@ class TokenInterceptor extends Interceptor {
   Future<void> onError(
       DioException err, ErrorInterceptorHandler handler) async {
     log("TokenInterceptor onError called with status: ${err.response?.statusCode}");
-
-    if (kDebugMode) {
-      log(
-        "---------[TokenInterceptor]---------ON_ERROR(${err.response?.statusCode})------------------\n\n"
-        "URL: ${err.response?.realUri.path}\n"
-        "TYPE: ${err.type}\n"
-        "Data: ${err.response?.data}\n"
-        "Message: ${err.message}\n"
-        "---------------------------------------------------------------------------\n\n",
-      );
-    }
-
-    log("TokenInterceptor processing error: ${err.response?.statusCode} - ${err.response?.data}");
 
     // Skip interception for login + device-token endpoints; their
     // failures should never log the user out.

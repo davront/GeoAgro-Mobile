@@ -1,11 +1,12 @@
-import 'dart:io';
 import 'dart:async';
+import 'dart:io';
 import 'package:l/l.dart';
-import 'package:dio/io.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 import '../interceptors/token_interceptor.dart';
+import '../interceptors/secure_logger_interceptor.dart';
 import '../../constants/app_constants.dart';
 
 import '../../storage/app_storage.dart';
@@ -20,7 +21,6 @@ class ApiServiceV2 {
     if (_dio != null && _isInitialized) return _dio!;
 
     _dio = Dio();
-    
 
     _dio!.options = BaseOptions(
       baseUrl: ApiConst.baseUrl,
@@ -30,34 +30,25 @@ class ApiServiceV2 {
       headers: {
         'Content-Type': 'application/json; charset=UTF-8',
       },
-      validateStatus: (status) => status != null && status < 500 && status != 401,
+      validateStatus: (status) =>
+          status != null && status < 500 && status != 401,
     );
-
-
 
     _dio!.interceptors.addAll([
       TokenInterceptor.instance,
-      PrettyDioLogger(
-        requestHeader: true,
-        requestBody: true,
-        responseBody: true,
-        responseHeader: false,
-        error: true,
-        compact: true,
-        maxWidth: 90,
-      ),
+      SecureLoggerInterceptor(),
+      if (kDebugMode)
+        PrettyDioLogger(
+          requestHeader: false, // Already logged by SecureLoggerInterceptor
+          requestBody: false,
+          responseBody: false,
+          responseHeader: false,
+          error: true,
+          compact: true,
+          maxWidth: 90,
+          enabled: false,
+        ),
     ]);
-
-
-
-    if (Platform.isAndroid) {
-      (_dio!.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-        final client = HttpClient();
-        client.badCertificateCallback =
-            (X509Certificate cert, String host, int port) => true;
-        return client;
-      };
-    }
 
     _isInitialized = true;
     return _dio!;
@@ -68,17 +59,16 @@ class ApiServiceV2 {
     int maxRetries = AppConstants.apiRetryAttempts,
   }) async {
     int attempts = 0;
-    
+
     l.i("_makeRequest: Starting with maxRetries: $maxRetries");
-    
+
     while (attempts < maxRetries) {
       try {
         l.i("_makeRequest: Attempt ${attempts + 1}");
-        
 
         final response = await requestFunction();
         l.i("_makeRequest: Response received: ${response.statusCode}");
-        
+
         return ApiResponse(
           statusCode: response.statusCode ?? 500,
           data: response.data,
@@ -91,12 +81,12 @@ class ApiServiceV2 {
             data: {"message": "Authentication required"},
           );
         }
-        
+
         attempts++;
         l.e("API Error (attempt $attempts): ${e.message}");
         l.e("DioException type: ${e.type}");
         l.e("DioException response: ${e.response?.data}");
-        
+
         if (attempts >= maxRetries) {
           l.e("_makeRequest: Max retries reached");
           return ApiResponse(
@@ -104,8 +94,7 @@ class ApiServiceV2 {
             data: e.response?.data ?? {"message": e.message},
           );
         }
-        
-        
+
         l.i("_makeRequest: Waiting $attempts seconds before retry");
         await Future.delayed(Duration(seconds: attempts));
       } catch (e) {
@@ -116,7 +105,7 @@ class ApiServiceV2 {
         );
       }
     }
-    
+
     l.e("_makeRequest: All retries exhausted");
     return ApiResponse(
       statusCode: 500,
@@ -124,15 +113,16 @@ class ApiServiceV2 {
     );
   }
 
-  static Future<ApiResponse> get(String endpoint, {Map<String, dynamic>? queryParameters}) async {
+  static Future<ApiResponse> get(String endpoint,
+      {Map<String, dynamic>? queryParameters}) async {
     return _makeRequest(() async {
       final dio = await initDio();
       final token = await AppStorage.$read(key: StorageKey.accessToken);
-      
+
       if (token != null && token.isNotEmpty) {
         dio.options.headers['Authorization'] = 'Bearer $token';
       }
-      
+
       return await dio.get(endpoint, queryParameters: queryParameters);
     });
   }
@@ -141,11 +131,11 @@ class ApiServiceV2 {
     return _makeRequest(() async {
       final dio = await initDio();
       final token = await AppStorage.$read(key: StorageKey.accessToken);
-      
+
       if (token != null && token.isNotEmpty) {
         dio.options.headers['Authorization'] = 'Bearer $token';
       }
-      
+
       return await dio.post(endpoint, data: data);
     });
   }
@@ -155,11 +145,11 @@ class ApiServiceV2 {
     return _makeRequest(() async {
       final dio = await initDio();
       final token = await AppStorage.$read(key: StorageKey.accessToken);
-      
+
       if (token != null && token.isNotEmpty) {
         dio.options.headers['Authorization'] = 'Bearer $token';
       }
-      
+
       return await dio.put(endpoint, data: data);
     });
   }
@@ -168,19 +158,19 @@ class ApiServiceV2 {
   static Future<ApiResponse> patch(String endpoint, {dynamic data}) async {
     l.i("PATCH request to: $endpoint");
     l.i("PATCH data: $data");
-    
+
     return _makeRequest(() async {
       final dio = await initDio();
       final token = await AppStorage.$read(key: StorageKey.accessToken);
-      
+
       l.i("PATCH token: ${token != null ? 'present' : 'missing'}");
-      
+
       if (token != null && token.isNotEmpty) {
         dio.options.headers['Authorization'] = 'Bearer $token';
       }
-      
+
       l.i("PATCH headers: ${dio.options.headers}");
-      
+
       final response = await dio.patch(endpoint, data: data);
       l.i("PATCH response: ${response.statusCode}");
       return response;
@@ -192,58 +182,60 @@ class ApiServiceV2 {
     return _makeRequest(() async {
       final dio = await initDio();
       final token = await AppStorage.$read(key: StorageKey.accessToken);
-      
+
       if (token != null && token.isNotEmpty) {
         dio.options.headers['Authorization'] = 'Bearer $token';
       }
-      
+
       return await dio.delete(endpoint);
     });
   }
 
-  static Future<ApiResponse> multipart(String endpoint, {
+  static Future<ApiResponse> multipart(
+    String endpoint, {
     required Map<String, String> fields,
     required List<MapEntry<String, File>> files,
   }) async {
     return _makeRequest(() async {
       final dio = await initDio();
       final token = await AppStorage.$read(key: StorageKey.accessToken);
-      
+
       if (token != null && token.isNotEmpty) {
         dio.options.headers['Authorization'] = 'Bearer $token';
       }
-      
+
       FormData formData = FormData.fromMap(fields);
-      
+
       for (var fileEntry in files) {
         formData.files.add(MapEntry(
           fileEntry.key,
           await MultipartFile.fromFile(fileEntry.value.path),
         ));
       }
-      
+
       return await dio.post(endpoint, data: formData);
     });
   }
 
-  static Future<ApiResponse> uploadImages(String endpoint, List<File> images) async {
+  static Future<ApiResponse> uploadImages(
+      String endpoint, List<File> images) async {
     return _makeRequest(() async {
       final dio = await initDio();
       final token = await AppStorage.$read(key: StorageKey.accessToken);
-      
+
       if (token != null && token.isNotEmpty) {
         dio.options.headers['Authorization'] = 'Bearer $token';
       }
-      
+
       FormData formData = FormData();
-      
+
       for (int i = 0; i < images.length; i++) {
         formData.files.add(MapEntry(
           'images[$i]',
           await MultipartFile.fromFile(images[i].path),
         ));
       }
-      
+
       return await dio.post(endpoint, data: formData);
     });
   }
@@ -252,4 +244,4 @@ class ApiServiceV2 {
     _dio = null;
     _isInitialized = false;
   }
-} 
+}

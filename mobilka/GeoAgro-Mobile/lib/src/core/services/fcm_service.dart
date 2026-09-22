@@ -114,7 +114,6 @@ class FcmService {
         return;
       }
 
-      log('FCM Token: $_fcmToken');
       debugPrint('FCM: token acquired');
       _tokenRetryAttempt = 0;
       _tokenRetryTimer?.cancel();
@@ -123,7 +122,7 @@ class FcmService {
 
       _tokenRefreshSub?.cancel();
       _tokenRefreshSub = _messaging.onTokenRefresh.listen((newToken) async {
-        log('FCM Token refreshed: $newToken');
+        debugPrint('FCM: token refreshed');
         _fcmToken = newToken;
         await _saveTokenToStorage();
         await _sendTokenToServer();

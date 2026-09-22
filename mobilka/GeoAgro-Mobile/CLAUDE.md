@@ -11,7 +11,7 @@ Flutter mobile app for agricultural plantation management in Uzbekistan.
 - **API base**: `https://api.geoagro.uz`
 - **Backend**: Django REST (pagination, token auth)
 - **Maps**: Google Maps Flutter
-- **Auth flow**: Phone login → PIN/biometric lock → home
+- **Auth flow**: Phone login → home
 
 ## Commands
 
@@ -38,7 +38,7 @@ lib/
     │   ├── server/
     │   │   ├── api/               # Dio client, API constants, endpoints
     │   │   └── interceptors/      # token, connectivity, logging
-    │   ├── services/              # biometric, FCM, permissions, PIN
+    │   ├── services/              # FCM, permissions
     │   ├── setting/               # app bootstrap (setup, runner, remote config)
     │   ├── storage/               # AppStorage (flutter_secure_storage + shared_prefs)
     │   ├── style/                 # legacy colors
@@ -50,7 +50,7 @@ lib/
     │   ├── model/                 # farmer, fruits, plantation, notification, token, user
     │   └── repository/            # AppRepositoryImpl
     └── feature/
-        ├── auth/                  # login, PIN, biometric
+        ├── auth/                  # login
         ├── home/                  # home, approved/pending/recheck lists, notifications
         ├── fermers/               # farmer CRUD, statistics, plantations
         ├── detail_page/           # plantation detail

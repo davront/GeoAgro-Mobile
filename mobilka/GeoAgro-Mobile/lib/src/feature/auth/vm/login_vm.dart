@@ -46,7 +46,6 @@ class LoginVm extends ChangeNotifier {
         password: trimmedPassword,
       );
       debugPrint("🔐 Login response status: ${response.statusCode}");
-      debugPrint("🔐 Login response data: ${response.data}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final jsonData = response.data;
@@ -114,9 +113,8 @@ class LoginVm extends ChangeNotifier {
         return;
       }
 
-      debugPrint("✅ getUserInfo response received: $userInfoJson");
+      debugPrint("✅ getUserInfo response received");
       final decoded = jsonDecode(userInfoJson);
-      debugPrint("🔍 Decoded user info: $decoded");
 
       if (decoded is Map<String, dynamic>) {
         final dId = decoded["district_id"];
