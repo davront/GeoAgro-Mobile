@@ -61,3 +61,6 @@ app.*.map.json
 
 # Auto Claude data directory
 .auto-claude/
+
+# Local Claude skill suggestion data
+.claude/skills/jev-skill-suggestion/

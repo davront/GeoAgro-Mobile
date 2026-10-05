@@ -71,9 +71,13 @@ sealed class Utils {
 
     overlay.insert(overlayEntry);
 
-    // Xabarni avtomatik olib tashlash
+    // Xabarni avtomatik olib tashlash — mounted tekshiruvisiz ikkinchi
+    // remove() (masalan navigatsiya overlay'ni allaqachon tozalagan
+    // bo'lsa) assertion xatosiga olib keladi.
     Future.delayed(duration, () {
-      overlayEntry.remove();
+      if (overlayEntry.mounted) {
+        overlayEntry.remove();
+      }
     });
   }
 }
