@@ -1399,15 +1399,6 @@ class EditVM extends ChangeNotifier {
       for (final path in newImages) {
         final resp = await _appRepositoryImpl.postPlantationImage(
             id: plantationModel.id!, filePath: path);
-        // Если новый эндпоинт недоступен, пробуем легаси одним запросом
-        if (resp.statusCode == 405) {
-          final legacy = await _appRepositoryImpl.editImage(
-              id: plantationModel.id!, images: newImages);
-          if (legacy == null) {
-            return false;
-          }
-          break;
-        }
         if (resp.statusCode != 200 && resp.statusCode != 201) {
           return false;
         }
@@ -1768,7 +1759,6 @@ class EditVM extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Try modern endpoint
       final resp = await _appRepositoryImpl.postPlantationImage(
           id: plantationId, filePath: pickedFile.path);
       if (resp.statusCode == 200 || resp.statusCode == 201) {
@@ -1777,15 +1767,6 @@ class EditVM extends ChangeNotifier {
         return (resp.data is Map && resp.data['message'] is String)
             ? resp.data['message'] as String
             : 'Rasm muvaffaqiyatli yuklandi';
-      }
-      // Fallback to legacy batch
-      if (resp.statusCode == 405) {
-        final legacy = await _appRepositoryImpl
-            .editImage(id: plantationId, images: [pickedFile.path]);
-        if (legacy != null) {
-          await refreshDetailImages();
-          return 'Rasm muvaffaqiyatli yuklandi';
-        }
       }
       errorMessage = (resp.data is Map && resp.data['message'] is String)
           ? resp.data['message'] as String

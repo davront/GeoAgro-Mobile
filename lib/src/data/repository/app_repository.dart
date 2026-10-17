@@ -18,11 +18,6 @@ abstract class AppRepo {
 
   Future<String?> getRelatedPlantationsMap(int plantationId);
 
-  Future<String?> getNearbyPlantations(
-      {required double latitude,
-      required double longitude,
-      double radius = 1000});
-
   Future<String?> getUserPlantationsForMap();
 
   Future<String?> getFermersList({int? page});
@@ -50,16 +45,13 @@ abstract class AppRepo {
   Future<ApiResponse> editPlantation(
       {required int id, required Map<String, dynamic> body});
 
-  Future<String?> editImage({required int id, required List<String> images});
-
   // Images per-endpoint operations
-  Future<String?> getPlantationImages({required int id});
   Future<ApiResponse> postPlantationImage(
       {required int id, required String filePath});
   Future<String?> deletePlantationImage(
       {required int plantationId, required int imageId});
 
-  Future<String?> getUserInfo();
+  Future<String?> getUserInfo({bool forceRefresh = false});
 
   Future<String?> getFarmerById(int farmerId);
 

@@ -106,7 +106,8 @@ class LoginVm extends ChangeNotifier {
 
     try {
       debugPrint("📡 Calling getUserInfo API...");
-      final userInfoJson = await _appRepositoryImpl.getUserInfo();
+      final userInfoJson =
+          await _appRepositoryImpl.getUserInfo(forceRefresh: true);
 
       if (userInfoJson == null) {
         debugPrint("❌ getUserInfo returned null");

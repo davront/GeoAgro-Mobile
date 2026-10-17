@@ -258,41 +258,6 @@ class ApiService {
     }
   }
 
-  static Future<String?> uploadImages(
-      String api, List<String> filePaths) async {
-    try {
-      List<MultipartFile> files = [];
-
-      for (var filePath in filePaths) {
-        files.add(await MultipartFile.fromFile(filePath));
-      }
-
-      final formData = FormData.fromMap({
-        'images': files,
-      });
-
-      final response = await (await initDio()).patch<dynamic>(
-        api,
-        data: formData,
-        options: Options(
-          headers: await ApiService.getHeaders(isUpload: true),
-        ),
-      );
-
-      return jsonEncode(response.data);
-    } on TimeoutException catch (_) {
-      l.e("The connection has timed out, Please try again!");
-      rethrow;
-    } on DioException catch (e) {
-      // Let the interceptor handle 401 errors
-      l.e(e.response.toString());
-      rethrow;
-    } on Object catch (e) {
-      l.e(e.toString());
-      rethrow;
-    }
-  }
-
   /// Загружает файл под произвольным именем поля через PATCH multipart.
   /// Используется для deal_file/resolution_file на
   /// `/api/plantations/{id}/` — тот endpoint (не mobile-update) единственный

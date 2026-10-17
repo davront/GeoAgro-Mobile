@@ -342,7 +342,12 @@ class CreateMapPageVm extends ChangeNotifier {
     }
   }
 
+  // forme/map/ не зависит от местоположения (без параметров), поэтому
+  // грузится один раз из onMapCreated — раньше его повторно дёргал
+  // getCurrentLocation (при открытии и на каждый тап "моё
+  // местоположение"), ~400 КБ впустую.
   Future<void> loadNearbyPlantations() async {
+    if (isLoadingNearby) return;
     isLoadingNearby = true;
     _safeNotifyListeners();
 
@@ -1099,9 +1104,6 @@ class CreateMapPageVm extends ChangeNotifier {
         );
       }
 
-      // Загружаем соседние плантации после получения местоположения
-      loadNearbyPlantations();
-
       if (mapController != null && currentLocation != null) {
         mapController!.animateCamera(CameraUpdate.newCameraPosition(
           CameraPosition(target: currentLocation!, zoom: 18),
@@ -1116,9 +1118,6 @@ class CreateMapPageVm extends ChangeNotifier {
 
       // Загружаем иконку пользователя
       await loadUserArrowIcon();
-
-      // Загружаем соседние плантации
-      loadNearbyPlantations();
     } finally {
       _setLoading(false);
       _safeNotifyListeners();

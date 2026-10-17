@@ -50,6 +50,9 @@ class QueuedImage {
 /// хранится отдельно для create — эндпоинт создания игнорирует
 /// user_location в multipart body, точка досылается отдельным PATCH
 /// после успешного создания (см. detail_vm.dart sendUserLocation).
+/// `namedFiles` (deal_file/resolution_file → стабильный путь) и
+/// `comment` — только для create: файлы уходят в тот же multipart, а
+/// комментарий досылается отдельным POST после создания, как в онлайн-флоу.
 class QueueItem {
   final String id;
   final QueueItemType type;
@@ -60,6 +63,8 @@ class QueueItem {
   final Map<String, dynamic> requestBody;
   final Map<String, double>? userLocation;
   final List<QueuedImage> images;
+  final Map<String, String> namedFiles;
+  final String? comment;
   final DateTime collectedAt;
   int attemptCount;
   String? lastError;
@@ -75,6 +80,8 @@ class QueueItem {
     required this.requestBody,
     this.userLocation,
     this.images = const [],
+    this.namedFiles = const {},
+    this.comment,
     required this.collectedAt,
     this.attemptCount = 0,
     this.lastError,
@@ -100,6 +107,8 @@ class QueueItem {
         images: (json["images"] as List<dynamic>? ?? [])
             .map((e) => QueuedImage.fromJson(e as Map<String, dynamic>))
             .toList(),
+        namedFiles: Map<String, String>.from(json["named_files"] as Map? ?? {}),
+        comment: json["comment"] as String?,
         collectedAt: DateTime.parse(json["collected_at"] as String),
         attemptCount: json["attempt_count"] as int? ?? 0,
         lastError: json["last_error"] as String?,
@@ -118,6 +127,8 @@ class QueueItem {
         "request_body": requestBody,
         "user_location": userLocation,
         "images": images.map((e) => e.toJson()).toList(),
+        "named_files": namedFiles,
+        "comment": comment,
         "collected_at": collectedAt.toIso8601String(),
         "attempt_count": attemptCount,
         "last_error": lastError,
