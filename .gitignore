@@ -55,4 +55,15 @@ app.*.map.json
 
 # Server files (update server)
 /server/
+
+# Large GeoJSON files
+**/tuman_chegara.geojson
+
+# Auto Claude data directory
+.auto-claude/
+
+# Local Claude skill suggestion data
+.claude/skills/jev-skill-suggestion/
+
+# Git worktrees
 .worktrees/
