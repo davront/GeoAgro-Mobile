@@ -46,7 +46,7 @@ class _FarmerPlantationsPageState extends ConsumerState<FarmerPlantationsPage> {
     // Load farmer plantations when page initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(farmerPlantationsVm.notifier).getFarmerPlantations(
-            farmerInn: widget.farmerInn,
+            farmerId: widget.farmerId,
           );
     });
   }
@@ -82,7 +82,7 @@ class _FarmerPlantationsPageState extends ConsumerState<FarmerPlantationsPage> {
         errorMessage: vm.errorMessage ?? "Kutilmagan xatolik",
         onTap: () =>
             ref.read(farmerPlantationsVm.notifier).getFarmerPlantations(
-                  farmerInn: widget.farmerInn,
+                  farmerId: widget.farmerId,
                 ),
       );
     }

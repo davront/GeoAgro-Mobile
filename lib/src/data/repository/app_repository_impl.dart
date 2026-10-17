@@ -409,12 +409,12 @@ class AppRepositoryImpl implements AppRepo {
   }
 
   @override
-  Future<String?> getFarmerPlantations({required int farmerInn}) async {
+  Future<String?> getFarmerPlantations({required int farmerId}) async {
     try {
-      final url = ApiConst.apiFarmerPlantations(farmerInn: farmerInn);
+      final url = ApiConst.apiFarmerPlantations(farmerId: farmerId);
       final fullUrl = "${ApiConst.baseUrl}$url";
       debugPrint("getFarmerPlantations: Full URL: $fullUrl");
-      debugPrint("getFarmerPlantations: farmerInn=$farmerInn");
+      debugPrint("getFarmerPlantations: farmerId=$farmerId");
 
       final data = await ApiService.get(
         url,
@@ -519,10 +519,12 @@ class AppRepositoryImpl implements AppRepo {
   @override
   Future<String?> getFruitsRootstocks({required String rootstocks}) async {
     try {
-      final url = "${ApiConst.apiFruitsRootstocks}/?fruit=$rootstocks";
+      // fruit передаётся query-параметром: раньше URL склеивался как
+      // "rootstocks/" + "/?fruit=" → "//" → 404, подвои не грузились.
+      // Бэкенд фильтрует по названию фрукта, не по id.
       final data = await ApiService.get(
-        url,
-        ApiParams.emptyParams(),
+        ApiConst.apiFruitsRootstocks,
+        {"fruit": rootstocks},
       );
       return data;
     } on DioException catch (e) {

@@ -184,7 +184,7 @@ final class RouterConfigService {
                     state,
                     FarmerPlantationsPage(
                       farmerId:
-                          farmerId, // Сохраняем для отображения, но не используем в API
+                          farmerId, // Идёт в API: /api/mymap/plantations/?farmer_id=
                       farmerInn: farmerInn,
                       farmerName: farmerName,
                     ),

@@ -663,7 +663,7 @@ class DetailVM extends ChangeNotifier {
       // готов, повторной проверки не требуется.
       final isOnline = await NetworkUtils.hasInternetConnection();
       if (!isOnline) {
-        return _enqueueAndReportOffline(ref, jsonData, images);
+        return await _enqueueAndReportOffline(ref, jsonData, images);
       }
 
       final response = await _appRepositoryImpl.postCreatePlantationWithImages(
