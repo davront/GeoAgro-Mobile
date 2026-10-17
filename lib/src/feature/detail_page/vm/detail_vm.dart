@@ -663,7 +663,7 @@ class DetailVM extends ChangeNotifier {
       // готов, повторной проверки не требуется.
       final isOnline = await NetworkUtils.hasInternetConnection();
       if (!isOnline) {
-        return await _enqueueAndReportOffline(ref, jsonData, images);
+        return await _enqueueAndReportOffline(ref, jsonData, images, namedFiles);
       }
 
       final response = await _appRepositoryImpl.postCreatePlantationWithImages(
@@ -789,7 +789,7 @@ class DetailVM extends ChangeNotifier {
       // уже заполненную форму и фото.
       if (isNetworkError(e)) {
         try {
-          return await _enqueueAndReportOffline(ref, jsonData, images);
+          return await _enqueueAndReportOffline(ref, jsonData, images, namedFiles);
         } catch (enqueueError) {
           p.log("Failed to enqueue after network error: $enqueueError");
         }
@@ -811,12 +811,20 @@ class DetailVM extends ChangeNotifier {
     WidgetRef ref,
     Map<String, dynamic> jsonData,
     List<String> images,
+    Map<String, String> namedFiles,
   ) async {
+    // Файлы договора и комментарий раньше в очередь не попадали и
+    // терялись при офлайн-создании.
+    final rawComment = commentsController.text.trim();
     await ref.read(uploadQueueServiceProvider).enqueueCreate(
           farmerId: farmerId,
           requestBody: jsonData,
           userLocation: userLocation,
           imagePaths: images,
+          namedFilePaths: namedFiles,
+          comment: rawComment.isEmpty
+              ? null
+              : SanitizationUtils.sanitizeComment(rawComment),
           collectedAt: _collectedAt,
         );
     await _clearDraft();

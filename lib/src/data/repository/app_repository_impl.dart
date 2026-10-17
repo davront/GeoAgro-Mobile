@@ -12,7 +12,7 @@ import "../../core/server/api/api_constants.dart";
 import "../model/farmer/create_fermer_model.dart";
 import '../../core/storage/app_storage.dart';
 import '../../core/server/api/api_service_v2.dart';
-// Removed unused import: '../../core/setting/setup.dart'
+import '../../core/setting/setup.dart' show accessToken;
 
 class AppRepositoryImpl implements AppRepo {
   const AppRepositoryImpl._();
@@ -310,32 +310,6 @@ class AppRepositoryImpl implements AppRepo {
     return null;
   }
 
-  /// Get nearby plantations for creating new plantation
-  @override
-  Future<String?> getNearbyPlantations(
-      {required double latitude,
-      required double longitude,
-      double radius = 1000}) async {
-    try {
-      final params = {
-        'latitude': latitude.toString(),
-        'longitude': longitude.toString(),
-        'radius': radius.toString(),
-      };
-
-      final data = await ApiService.get(
-          "${ApiConst.apiPlantations}nearby/", ApiParams.queryParams(params));
-      return data;
-    } on DioException catch (e) {
-      debugPrint("Server error: ${e.response?.data ?? e.message}");
-      _recordError(e);
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
-      _recordError(e);
-    }
-    return null;
-  }
-
   /// Get user plantations for map display
   @override
   Future<String?> getUserPlantationsForMap() async {
@@ -606,22 +580,6 @@ class AppRepositoryImpl implements AppRepo {
 
   // ===== Images per-endpoint operations =====
   @override
-  Future<String?> getPlantationImages({required int id}) async {
-    try {
-      final data = await ApiService.get(
-          ApiConst.apiUpdateImage(id), ApiParams.emptyParams());
-      return data;
-    } on DioException catch (e) {
-      debugPrint("Server error: ${e.response?.data ?? e.message}");
-      _recordError(e);
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
-      _recordError(e);
-    }
-    return null;
-  }
-
-  @override
   Future<ApiResponse> postPlantationImage(
       {required int id, required String filePath}) async {
     try {
@@ -669,30 +627,31 @@ class AppRepositoryImpl implements AppRepo {
     return null;
   }
 
-  @override
-  Future<String?> editImage(
-      {required int id, required List<String> images}) async {
-    try {
-      final data = await ApiService.uploadImages(
-          ApiConst.apiLegacyImagesUpdate(id), images);
-      return data;
-    } on DioException catch (e) {
-      debugPrint("Server error: ${e.response?.data ?? e.message}");
-      _recordError(e);
-      return "Server error: ${e.response?.statusCode ?? 'Unknown status code'}";
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
-      _recordError(e);
-      return "Unexpected error: $e";
-    }
-  }
-
   // ===== Misc =====
+  // Профиль кэшируется в памяти на сессию: раньше его заново грузили 7
+  // экранов (drawer, обе карты, статистика, ...). Ключ — accessToken:
+  // после logout/login (accessToken = null/новый) кэш не переиспользуется.
+  static String? _userInfoCache;
+  static String? _userInfoCacheToken;
+
+  /// [forceRefresh] — для cold start/login/экрана профиля, где флаги
+  /// (isSpecialUser, limit_km) должны быть свежими с сервера.
   @override
-  Future<String?> getUserInfo() async {
+  Future<String?> getUserInfo({bool forceRefresh = false}) async {
+    final token = accessToken;
+    if (!forceRefresh &&
+        token != null &&
+        _userInfoCache != null &&
+        _userInfoCacheToken == token) {
+      return _userInfoCache;
+    }
     try {
       final data = await ApiService.get(
           ApiConst.apiGetUserInfo, ApiParams.emptyParams());
+      if (data != null) {
+        _userInfoCache = data;
+        _userInfoCacheToken = token;
+      }
       return data;
     } on DioException catch (e) {
       debugPrint("Server error: ${e.response?.data ?? e.message}");

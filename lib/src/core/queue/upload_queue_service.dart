@@ -87,9 +87,12 @@ class UploadQueueService extends ChangeNotifier {
     required Map<String, dynamic> requestBody,
     Map<String, double>? userLocation,
     required List<String> imagePaths,
+    Map<String, String> namedFilePaths = const {},
+    String? comment,
     DateTime? collectedAt,
   }) async {
     final images = await _copyImagesToStableDir(imagePaths);
+    final namedFiles = await _copyNamedFilesToStableDir(namedFilePaths);
     final item = QueueItem(
       id: _uuid.v4(),
       type: QueueItemType.createPlantation,
@@ -98,6 +101,8 @@ class UploadQueueService extends ChangeNotifier {
       requestBody: requestBody,
       userLocation: userLocation,
       images: images,
+      namedFiles: namedFiles,
+      comment: comment,
       collectedAt: collectedAt ?? DateTime.now(),
     );
     _items.add(item);
@@ -183,6 +188,19 @@ class UploadQueueService extends ChangeNotifier {
     return result;
   }
 
+  /// deal_file/resolution_file → стабильная копия. В отличие от фото,
+  /// ошибка копирования не пропускает файл молча: исходный путь
+  /// оставляем — лучше попытаться отправить его, чем потерять документ.
+  Future<Map<String, String>> _copyNamedFilesToStableDir(
+      Map<String, String> files) async {
+    final result = <String, String>{};
+    for (final entry in files.entries) {
+      result[entry.key] = await UploadQueueStore.instance
+          .copyToStableDir(entry.value, prefix: '${entry.key}_');
+    }
+    return result;
+  }
+
   bool _isSuccess(ApiResponse response) =>
       response.statusCode == 200 || response.statusCode == 201;
 
@@ -246,6 +264,7 @@ class UploadQueueService extends ChangeNotifier {
     final response = await _repo.postCreatePlantationWithImages(
       body: item.requestBody,
       image: item.images.map((i) => i.localPath).toList(),
+      namedFiles: item.namedFiles.isEmpty ? null : item.namedFiles,
     );
     if (!_isSuccess(response)) {
       _markFailed(item, _extractError(response));
@@ -265,6 +284,20 @@ class UploadQueueService extends ChangeNotifier {
         latitude: loc['latitude']!,
         longitude: loc['longitude']!,
       ));
+    }
+    // Комментарий — best-effort, как в онлайн-флоу: плантация уже
+    // создана, ошибка здесь не должна переводить задачу в failed (ретрай
+    // создал бы дубль плантации).
+    final comment = item.comment;
+    if (createdId != null && comment != null && comment.isNotEmpty) {
+      final resp = await _repo.addPlantationComment(
+        plantationId: createdId,
+        body: comment,
+      );
+      if (!_isSuccess(resp)) {
+        developer.log(
+            'UploadQueueService: comment for $createdId failed: ${resp.statusCode}');
+      }
     }
     await _deleteImages(item);
   }
@@ -328,9 +361,16 @@ class UploadQueueService extends ChangeNotifier {
   }
 
   Future<void> _deleteImages(QueueItem item) async {
-    for (final img in item.images) {
+    // namedFiles при неудачном копировании хранят исходный путь
+    // пользователя — удаляем только наши копии из каталога очереди.
+    final queueDir = (await UploadQueueStore.instance.imagesDir()).path;
+    final paths = [
+      ...item.images.map((i) => i.localPath),
+      ...item.namedFiles.values.where((p) => p.startsWith(queueDir)),
+    ];
+    for (final path in paths) {
       try {
-        final file = File(img.localPath);
+        final file = File(path);
         if (await file.exists()) await file.delete();
       } catch (e) {
         developer.log('UploadQueueService: failed to delete image: $e');

@@ -87,7 +87,7 @@ Future<void> setup() async {
     if (accessToken != null) {
       try {
         final repo = AppRepositoryImpl();
-        final userInfo = await repo.getUserInfo();
+        final userInfo = await repo.getUserInfo(forceRefresh: true);
         if (userInfo != null) {
           final decoded = jsonDecode(userInfo);
           if (decoded is Map<String, dynamic>) {

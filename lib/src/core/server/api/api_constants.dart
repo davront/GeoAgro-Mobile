@@ -10,8 +10,6 @@ final class ApiConst {
   static String apiUpdatePlantation(int id) =>
       '/api/plantations/$id/mobile-update/';
   static String apiUpdateImage(int id) => '/api/plantations/$id/images/';
-  static String apiLegacyImagesUpdate(int id) =>
-      '/api/plantations/$id/images/update/';
   static String apiDeleteImage(int plantationId, int imageId) =>
       '/api/plantations/$plantationId/images/$imageId/';
   static String apiDeletePlantation(int id) => '/api/plantations/$id/';
@@ -30,7 +28,6 @@ final class ApiConst {
       "/api/plantations/forme/approved/";
   static const String apiPlantationsPending = "/api/plantations/forme/pending/";
   static const String apiCreatePlantation = "/api/plantations/create/";
-  static const String apiGetRegions = "/api/regions/";
   static const String apiGetUserInfo = "/api/users/profile/";
   static const String apiGetDistrcts = "/api/common/districts/";
   static const String apiFermers = "/api/farmers/";
@@ -43,8 +40,7 @@ final class ApiConst {
   static String apiFruitsVariety(int fruitId) =>
       "/api/common/fruits/$fruitId/varieties/";
   static const String apiFruitsRootstocks = "/api/common/rootstocks/";
-  static const String apiPlantationsUpdate = "/api/plantations/1/";
-  static const String apiFarmersStatistics = "/api/statistics/farmers";
+  static const String apiFarmersStatistics = "/api/statistics/farmers/";
   static const String apiNotifications = "/api/notifications/";
   static const String apiNotificationsUnreadCount =
       "/api/notifications/unread-count/";

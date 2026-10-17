@@ -102,7 +102,7 @@ class _ProfileSettingsPageState extends ConsumerState<ProfileSettingsPage> {
   Future<void> _loadUserInfo() async {
     setState(() => _isLoading = true);
     try {
-      final response = await _repository.getUserInfo();
+      final response = await _repository.getUserInfo(forceRefresh: true);
       if (!mounted) return;
       if (response != null) {
         final decoded = jsonDecode(response);
