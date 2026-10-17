@@ -29,7 +29,7 @@ abstract class AppRepo {
 
   Future<String?> searchFarmers({required int inn});
 
-  Future<String?> getFarmerPlantations({required int farmerInn});
+  Future<String?> getFarmerPlantations({required int farmerId});
 
   Future<ApiResponse> postNewFermer({required CreateFermerModel fermer});
 

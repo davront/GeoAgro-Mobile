@@ -35,8 +35,10 @@ final class ApiConst {
   static const String apiGetDistrcts = "/api/common/districts/";
   static const String apiFermers = "/api/farmers/";
   static String apiUpdateFarmer(int id) => "/api/farmers/$id/";
-  static String apiFarmerPlantations({required int farmerInn}) =>
-      "/api/mymap/plantations/?farmer_inn=$farmerInn";
+  // Бэкенд фильтрует только по farmer_id; farmer_inn отвечает 400
+  // "Необходимо указать farmer_id".
+  static String apiFarmerPlantations({required int farmerId}) =>
+      "/api/mymap/plantations/?farmer_id=$farmerId";
   static const String apiFruits = "/api/common/fruits/";
   static String apiFruitsVariety(int fruitId) =>
       "/api/common/fruits/$fruitId/varieties/";

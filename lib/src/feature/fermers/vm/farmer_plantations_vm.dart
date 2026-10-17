@@ -9,13 +9,13 @@ class FarmerPlantationsVm extends ChangeNotifier {
   List<FarmerPlantation> _plantations = [];
   bool _isLoading = false;
   String? _errorMessage;
-  int _farmerInn = 0;
+  int _farmerId = 0;
   bool _isDisposed = false;
 
   List<FarmerPlantation> get plantations => _plantations;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  int get farmerInn => _farmerInn;
+  int get farmerId => _farmerId;
 
   void _safeNotifyListeners() {
     if (!_isDisposed) {
@@ -23,21 +23,21 @@ class FarmerPlantationsVm extends ChangeNotifier {
     }
   }
 
-  Future<void> getFarmerPlantations({required int farmerInn}) async {
+  Future<void> getFarmerPlantations({required int farmerId}) async {
     if (_isDisposed) {
       debugPrint('FarmerPlantationsVm: Attempted to load plantations after dispose');
       return;
     }
 
-    _farmerInn = farmerInn;
+    _farmerId = farmerId;
     _isLoading = true;
     _errorMessage = null;
     _safeNotifyListeners();
 
-    debugPrint('FarmerPlantationsVm: Loading plantations for farmer INN: $farmerInn');
+    debugPrint('FarmerPlantationsVm: Loading plantations for farmer ID: $farmerId');
 
     try {
-      final response = await _appRepositoryImpl.getFarmerPlantations(farmerInn: farmerInn);
+      final response = await _appRepositoryImpl.getFarmerPlantations(farmerId: farmerId);
       
       if (_isDisposed) {
         debugPrint('FarmerPlantationsVm: Disposed during API call, ignoring response');
