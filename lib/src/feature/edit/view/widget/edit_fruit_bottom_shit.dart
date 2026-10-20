@@ -320,7 +320,10 @@ class EditFruitBottomShit extends ConsumerWidget {
                       },
                       style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green),
-                      child: Text("   Qo‘shish   ",
+                      child: Text(
+                          editVM.isEditingDetail
+                              ? "   Saqlash   "
+                              : "   Qo‘shish   ",
                           style:
                               TextStyle(fontSize: 14.sp, color: Colors.white)),
                     ),

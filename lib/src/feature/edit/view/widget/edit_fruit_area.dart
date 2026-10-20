@@ -34,41 +34,74 @@ class EditFruitArea extends ConsumerWidget {
                         SizedBox(
                           width: 300.w,
                           child: Card(
-                            child: Padding(
-                              padding: REdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SizedBox(height: 25),
-                                  _buildRow("Meva turi:", detail.fruitName ?? detail.fruit?.toString() ?? ""),
-                                  SizedBox(height: 8),
-                                  _buildRow("Meva navi:", detail.varietyName ?? detail.variety?.toString() ?? ""),
-                                  if (detail.iqtisodiysamarasiz == true) ...[
-                                    SizedBox(height: 8),
-                                    _buildRow("Iqtisodiy samarasiz maydon:", 
-                                        detail.economicInefficientArea?.toString() ?? "0.0"),
-                                  ] else ...[
-                                    SizedBox(height: 8),
-                                    _buildRow("Payvand turi:", detail.rootstockName ?? detail.rootstock?.toString() ?? ""),
-                                    SizedBox(height: 8),
-                                    _buildRow("Ekinlagan yil:",
-                                        detail.plantedYear.toString()),
-                                    SizedBox(height: 8),
-                                    _buildRow("Maydon:", detail.area.toString()),
-                                    SizedBox(height: 8),
-                                    _buildRow("Ko'chat sxemasi:", detail.schema),
+                            clipBehavior: Clip.antiAlias,
+                            child: InkWell(
+                              onTap: () => editDetailAt(index, ref, context),
+                              child: Padding(
+                                padding: REdgeInsets.all(12),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(height: 25),
+                                    _buildRow(
+                                      "Meva turi:",
+                                      detail.fruitName ??
+                                          detail.fruit?.toString() ??
+                                          "",
+                                    ),
                                     SizedBox(height: 8),
                                     _buildRow(
+                                      "Meva navi:",
+                                      detail.varietyName ??
+                                          detail.variety?.toString() ??
+                                          "",
+                                    ),
+                                    if (detail.iqtisodiysamarasiz == true) ...[
+                                      SizedBox(height: 8),
+                                      _buildRow(
+                                        "Iqtisodiy samarasiz maydon:",
+                                        detail.economicInefficientArea
+                                                ?.toString() ??
+                                            "0.0",
+                                      ),
+                                    ] else ...[
+                                      SizedBox(height: 8),
+                                      _buildRow(
+                                        "Payvand turi:",
+                                        detail.rootstockName ??
+                                            detail.rootstock?.toString() ??
+                                            "",
+                                      ),
+                                      SizedBox(height: 8),
+                                      _buildRow(
+                                        "Ekinlagan yil:",
+                                        detail.plantedYear.toString(),
+                                      ),
+                                      SizedBox(height: 8),
+                                      _buildRow(
+                                        "Maydon:",
+                                        detail.area.toString(),
+                                      ),
+                                      SizedBox(height: 8),
+                                      _buildRow(
+                                        "Ko'chat sxemasi:",
+                                        detail.schema,
+                                      ),
+                                      SizedBox(height: 8),
+                                      _buildRow(
                                         "Meva maydoni ximoya to`siq\nbilan o`ralganmi:",
-                                        detail.fenced == true ? 'Ha' : 'Yoq'),
-                                    SizedBox(height: 8),
-                                    _buildRow(
+                                        detail.fenced == true ? 'Ha' : 'Yoq',
+                                      ),
+                                      SizedBox(height: 8),
+                                      _buildRow(
                                         "Kutilayotgan hosil miqdori: T",
                                         detail.weight == null
                                             ? '—'
-                                            : detail.weight.toString()),
+                                            : detail.weight.toString(),
+                                      ),
+                                    ],
                                   ],
-                                ],
+                                ),
                               ),
                             ),
                           ),
@@ -76,12 +109,27 @@ class EditFruitArea extends ConsumerWidget {
                         Positioned(
                           right: 0,
                           top: 0,
-                          child: IconButton(
-                            icon: Icon(Icons.close,
-                                color: Colors.red, size: 16.sp),
-                            onPressed: () {
-                              removeDetailAt(index);
-                            },
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                tooltip: "Tahrirlash",
+                                icon: Icon(Icons.edit_outlined, size: 16.sp),
+                                onPressed: () =>
+                                    editDetailAt(index, ref, context),
+                              ),
+                              IconButton(
+                                tooltip: "O'chirish",
+                                icon: Icon(
+                                  Icons.close,
+                                  color: Colors.red,
+                                  size: 16.sp,
+                                ),
+                                onPressed: () {
+                                  removeDetailAt(index);
+                                },
+                              ),
+                            ],
                           ),
                         ),
                       ],
