@@ -1992,81 +1992,121 @@ class EditVM extends ChangeNotifier {
     notifyListeners();
   }
 
-  void editDetailAt(int index, WidgetRef ref, BuildContext context) async {
-    if (index >= 0 && index < selectedDetails.length) {
-      final fruitArea = selectedDetails[index];
+  /// Индекс фрукта, который сейчас правится в EditFruitBottomShit, или
+  /// null, если форма открыта для добавления нового.
+  int? editingDetailIndex;
 
-      // Заполняем поля данными существующего фрукта
-      selectedFruit = fruitList.firstWhere(
-        (fruit) => fruit.id == fruitArea.fruit,
-        orElse: () => fruitList.first,
-      );
+  bool get isEditingDetail => editingDetailIndex != null;
 
-      // Устанавливаем switcher в зависимости от типа фрукта
-      ref.read(switchIqtisodiy.notifier).state =
-          fruitArea.iqtisodiysamarasiz ?? false;
+  /// Открывает форму фрукта, заполненную значениями [index]. Фрукт остаётся
+  /// в списке, пока не нажато «Saqlash»: закрытие формы ничего не меняет.
+  Future<void> editDetailAt(
+      int index, WidgetRef ref, BuildContext context) async {
+    if (index < 0 || index >= selectedDetails.length) return;
+    await _prefillDetail(index, ref);
+    if (!context.mounted) return;
 
-      if (fruitArea.iqtisodiysamarasiz == true) {
-        // Экономически неэффективная площадь
-        economicInefficientAreaController.text =
-            fruitArea.economicInefficientArea?.toString() ?? "0.0";
-      } else {
-        // Обычная посадка
-        selectedFruitRoot = fruitRootList.firstWhere(
-          (root) => root.id == fruitArea.rootstock,
-          orElse: () => fruitRootList.first,
-        );
-
-        if (fruitArea.plantedYear != null) {
-          _selectedDate2 = DateTime(fruitArea.plantedYear!);
-        }
-
-        cultivatedArea.text = fruitArea.area?.toString() ?? "0.0";
-        tonnaController.text = fruitArea.weight?.toString() ?? "";
-
-        if (fruitArea.schema != null && fruitArea.schema!.contains('X')) {
-          final parts = fruitArea.schema!.split('X');
-          if (parts.length == 2) {
-            sxema1.text = parts[0];
-            sxema2.text = parts[1];
-          }
-        }
-
-        ref.read(switchFenced.notifier).state = fruitArea.fenced ?? false;
-      }
-
-      // Удаляем фрукт из списка (будет добавлен заново после редактирования)
-      selectedDetails.removeAt(index);
-      selectedFruitVerityRoot.removeAt(index);
-
-      // Загружаем данные фруктов
-      await getFruit();
-
-      // Открываем модальное окно для редактирования
-      if (context.mounted) {
-        await showModalBottomSheet(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(16.r),
-            ),
+    await showModalBottomSheet(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+      ),
+      backgroundColor: context.colors.surface,
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => FractionallySizedBox(
+        heightFactor: 0.9,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: EditFruitBottomShit(viewModelm: this),
           ),
-          backgroundColor: context.colors.surface,
-          context: context,
-          isScrollControlled: true,
-          builder: (context) {
-            return FractionallySizedBox(
-                heightFactor: 0.9,
-                child: EditFruitBottomShit(viewModelm: this));
-          },
-        );
+        ),
+      ),
+    );
 
-        // Если модальное окно закрыто, очищаем поля
-        ref.read(switchFenced.notifier).state = false;
-        resetFields(ref);
-      }
+    // Форма закрыта (сохранено, отменено или смахнута) — сбрасываем.
+    resetFields(ref);
+  }
 
-      notifyListeners();
+  Future<void> _prefillDetail(int index, WidgetRef ref) async {
+    final fa = selectedDetails[index];
+    _resetFieldsInternal();
+    editingDetailIndex = index;
+
+    await getFruit();
+    selectedFruit = fruitList
+            .where((f) => f.id == fa.fruit)
+            .cast<FruitModel?>()
+            .firstOrNull ??
+        fruitList
+            .where((f) => f.name == fa.fruitName)
+            .cast<FruitModel?>()
+            .firstOrNull;
+
+    final fruit = selectedFruit;
+    if (fruit != null) {
+      await Future.wait([
+        getFruitVerity(verity: fruit.id.toString()),
+        getFruitRootstocks(rootstocks: fruit.name),
+      ]);
+      selectedFruitVariety = fruitVerityList
+              .where((v) => v.id == fa.variety)
+              .cast<FruitVarietyModel?>()
+              .firstOrNull ??
+          fruitVerityList
+              .where((v) => v.name == fa.varietyName)
+              .cast<FruitVarietyModel?>()
+              .firstOrNull;
+      selectedFruitRoot = fruitRootList
+              .where((r) => r.id == fa.rootstock)
+              .cast<FruitRootstocksModel?>()
+              .firstOrNull ??
+          fruitRootList
+              .where((r) => r.name == fa.rootstockName)
+              .cast<FruitRootstocksModel?>()
+              .firstOrNull;
     }
+
+    final isIqtisodiy = fa.iqtisodiysamarasiz == true;
+    ref.read(switchIqtisodiy.notifier).state = isIqtisodiy;
+    if (isIqtisodiy) {
+      economicInefficientAreaController.text =
+          _plainNumber(fa.economicInefficientArea);
+      ref.read(switchFenced.notifier).state = false;
+    } else {
+      if (fa.plantedYear != null && fa.plantedYear! > 0) {
+        _selectedDate2 = DateTime(fa.plantedYear!);
+      }
+      cultivatedArea.text = _plainNumber(fa.area);
+      tonnaController.text = _plainNumber(fa.weight);
+      // Схема приходит как "4X2", "4x2" или "4×2".
+      final parts = (fa.schema ?? '').split(RegExp(r'[xX×*]'));
+      if (parts.length == 2) {
+        sxema1.text = parts[0].trim();
+        sxema2.text = parts[1].trim();
+      }
+      ref.read(switchFenced.notifier).state = fa.fenced ?? false;
+    }
+    notifyListeners();
+  }
+
+  /// 3.0 → "3", 2.5 → "2.5", null → "".
+  static String _plainNumber(num? v) {
+    if (v == null) return '';
+    return v == v.truncateToDouble() ? v.toInt().toString() : v.toString();
+  }
+
+  /// Новый фрукт — в конец; правка — на то же место.
+  void _putDetail(FruitArea fa) {
+    final i = editingDetailIndex;
+    if (i != null && i < selectedDetails.length) {
+      selectedDetails[i] = fa;
+      if (i < selectedFruitVerityRoot.length) selectedFruitVerityRoot[i] = fa;
+    } else {
+      selectedFruitVerityRoot.add(fa);
+      selectedDetails.add(fa);
+    }
+    editingDetailIndex = null;
   }
 
   void removeDetailAt(int index) {
@@ -2110,8 +2150,7 @@ class EditVM extends ChangeNotifier {
         iqtisodiysamarasiz: true,
         economicInefficientArea: econ,
       );
-      selectedFruitVerityRoot.add(fa);
-      selectedDetails.add(fa);
+      _putDetail(fa);
       _resetFieldsInternal();
       notifyListeners();
       return;
@@ -2148,8 +2187,7 @@ class EditVM extends ChangeNotifier {
         iqtisodiysamarasiz: false,
       );
 
-      selectedFruitVerityRoot.add(fa);
-      selectedDetails.add(fa);
+      _putDetail(fa);
       _resetFieldsInternal();
       notifyListeners();
     }
@@ -2169,6 +2207,7 @@ class EditVM extends ChangeNotifier {
   }
 
   void resetFields(WidgetRef ref) {
+    editingDetailIndex = null;
     _resetFieldsInternal();
     ref.read(switchIqtisodiy.notifier).state = false;
     ref.read(switchFenced.notifier).state = false;
