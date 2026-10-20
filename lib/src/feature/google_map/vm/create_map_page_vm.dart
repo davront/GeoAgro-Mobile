@@ -17,15 +17,19 @@ import '../../../data/model/plantation/forme_map_model.dart';
 import '../../../data/repository/app_repository_impl.dart';
 import '../../../core/storage/app_storage.dart';
 import '../../../core/services/district_boundary_service.dart';
+import '../drawing/drawing_controller.dart';
+import '../drawing/polygon_validator.dart';
+import '../drawing/snap_index.dart';
 import 'dart:convert';
-
-List<LatLng> polygoneCoordinates = [];
 
 class CreateMapPageVm extends ChangeNotifier {
   final AppRepositoryImpl _appRepositoryImpl = AppRepositoryImpl();
 
+  CreateMapPageVm() {
+    drawing.addListener(_onPointsChanged);
+  }
+
   GoogleMapController? mapController;
-  final List<LatLng> polylineCoordinates = [];
   final LatLng uzbLatLng =
       const LatLng(41.311081, 69.240562); // Default location
 
@@ -74,15 +78,28 @@ class CreateMapPageVm extends ChangeNotifier {
   FormeMapPlantation? selectedPlantation;
   bool showPlantationDialog = false;
 
-  // Состояние точечного рисования
-  bool isDrawingMode = false;
-  bool isPolygonComplete = false;
-  List<LatLng> drawingPoints = [];
-  List<double> segmentDistances = []; // Расстояния между точками
+  // Рисование: точки — в DrawingController (обновляется по действию
+  // агента), прицел — в ValueNotifier (обновляется каждый кадр движения
+  // карты и не вызывает notifyListeners, чтобы не перестраивать GoogleMap).
+  final DrawingController drawing = DrawingController();
+  final ValueNotifier<Crosshair?> crosshair = ValueNotifier(null);
+  SnapIndex? _snapIndex;
+  List<PolygonIssue> issues = const [];
   LatLng? centerPoint; // Центральная точка для рисования
 
-  // Состояние линейки для рисования
-  BitmapDescriptor? rulerIcon; // Иконка линейки
+  List<LatLng> get drawingPoints => drawing.points;
+  // Старое имя — его читает create_map_page при переходе на форму.
+  List<LatLng> get polylineCoordinates => drawing.points;
+
+  bool get canSubmit => issues.isEmpty;
+
+  /// Полигон красный только из-за ошибок формы контура, не из-за GPS.
+  bool get hasGeometryError => issues.any((i) =>
+      i.kind == PolygonIssueKind.selfIntersection ||
+      i.kind == PolygonIssueKind.overlap);
+
+  /// Первая причина, по которой «Keyingi» неактивна.
+  PolygonIssue? get blockingIssue => issues.isEmpty ? null : issues.first;
 
   // Кэш номерованных иконок вершин полигона (ключ — номер точки, 1-based).
   // Генерация PNG на каждый drag была бы расточительна — точка меняет
@@ -166,21 +183,6 @@ class CreateMapPageVm extends ChangeNotifier {
     }
   }
 
-  Future<void> loadRulerIcon() async {
-    if (rulerIcon != null) {
-      return;
-    }
-
-    try {
-      rulerIcon = await MarkerIconUtils.createRulerIcon();
-    } catch (e) {
-      debugPrint('Error loading ruler icon: $e');
-      // Используем дефолтную иконку если не удалось создать кастомную
-      rulerIcon =
-          BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan);
-    }
-  }
-
   Future<void> startUserHeadingUpdates() async {
     try {
       await loadUserArrowIcon();
@@ -195,7 +197,9 @@ class CreateMapPageVm extends ChangeNotifier {
             userHeading = position.heading;
           }
           currentLocation = LatLng(position.latitude, position.longitude);
+          isMockedLocation = position.isMocked;
           _updateUserArrowMarker();
+          _revalidate();
           _safeNotifyListeners();
         },
         onError: (e) {
@@ -266,6 +270,9 @@ class CreateMapPageVm extends ChangeNotifier {
   void dispose() {
     _isDisposed = true;
     _positionStreamSub?.cancel();
+    drawing.removeListener(_onPointsChanged);
+    drawing.dispose();
+    crosshair.dispose();
     super.dispose();
   }
 
@@ -461,6 +468,9 @@ class CreateMapPageVm extends ChangeNotifier {
       }
     }
 
+    _snapIndex = SnapIndex(nearbyPolygons.map((p) => p.points));
+    _revalidate();
+
     // Init/update cluster manager
     _initClusterManager();
     // Уведомляем UI об обновлении
@@ -588,7 +598,8 @@ class CreateMapPageVm extends ChangeNotifier {
     // Проверяем, был ли клик по полигону
     bool tappedOnPolygon = false;
     for (final polygon in nearbyPolygons) {
-      if (_isPointInPolygon(position, polygon.points)) {
+      if (GeoUtils.isPointInPolygon(position.latitude, position.longitude,
+          polygon.points.map((p) => (p.latitude, p.longitude)).toList())) {
         debugPrint('Tap detected inside polygon: ${polygon.polygonId.value}');
         onPolygonTap(polygon.polygonId);
         tappedOnPolygon = true;
@@ -596,163 +607,96 @@ class CreateMapPageVm extends ChangeNotifier {
       }
     }
 
-    // Если клик не по полигону, обрабатываем как обычный клик по карте
-    if (!tappedOnPolygon) {
-      // При тапе обновляем элементы рисования для обновления предварительной линии
-      _updateDrawingElements();
-    }
-
-    _safeNotifyListeners();
+    if (tappedOnPolygon) _safeNotifyListeners();
   }
 
-  // Проверяет, находится ли точка внутри полигона
-  bool _isPointInPolygon(LatLng point, List<LatLng> polygon) =>
-      GeoUtils.isPointInPolygon(
-        point.latitude,
-        point.longitude,
-        polygon.map((p) => (p.latitude, p.longitude)).toList(),
+  /// Ставит точку под прицел (или в точку прилипания к соседней границе).
+  Future<void> addPointAtRulerPosition() async {
+    var point = crosshair.value?.point;
+    if (point == null) {
+      // Камера ещё ни разу не двигалась — onCameraMove не приходил.
+      final controller = mapController;
+      if (controller == null) return;
+      final region = await controller.getVisibleRegion();
+      final center = LatLng(
+        (region.northeast.latitude + region.southwest.latitude) / 2,
+        (region.northeast.longitude + region.southwest.longitude) / 2,
       );
-
-  // Порог прилипания к границе соседнего полигона, в метрах — точнее,
-  // чем closing-hint (это точная привязка границы, не просто визуальный
-  // сигнал), чтобы не срабатывать случайно на любой точке рядом с чужим
-  // участком.
-  static const double _snapToEdgeThresholdMeters = 3.0;
-
-  // Метод для добавления точки в центре карты
-  void addPointAtRulerPosition() async {
-    if (mapController == null) return;
-
-    // Получаем центр карты
-    final center = await mapController!.getVisibleRegion();
-    final centerLat =
-        (center.northeast.latitude + center.southwest.latitude) / 2;
-    final centerLng =
-        (center.northeast.longitude + center.southwest.longitude) / 2;
-    LatLng centerPosition = LatLng(centerLat, centerLng);
-
-    // Snap-to-edge: если крестик рядом с границей уже существующего
-    // соседнего участка — прилипаем к ней, чтобы не оставлять узкую
-    // полоску незанятой земли между двумя смежными плантациями из-за
-    // ручной неточности постановки точки.
-    var bestSnapDistance = double.infinity;
-    (double, double)? bestSnapPoint;
-    for (final polygon in nearbyPolygons) {
-      final polygonCoords =
-          polygon.points.map((p) => (p.latitude, p.longitude)).toList();
-      final (snapPoint, distance) = GeoUtils.nearestPointOnPolygonEdge(
-        centerPosition.latitude,
-        centerPosition.longitude,
-        polygonCoords,
-      );
-      if (distance < bestSnapDistance) {
-        bestSnapDistance = distance;
-        bestSnapPoint = snapPoint;
-      }
+      point = _snapIndex?.query(center) ?? center;
     }
-    if (bestSnapPoint != null &&
-        bestSnapDistance <= _snapToEdgeThresholdMeters) {
-      final (snapLat, snapLng) = bestSnapPoint;
-      centerPosition = LatLng(snapLat, snapLng);
-    }
-
-    // Тактильное подтверждение — единственный визуальный отклик на тап
-    // "+" это крохотная точка где-то на карте, легко не заметить сам
-    // факт, что точка встала.
+    // Тактильное подтверждение: сама точка на спутнике едва заметна.
     HapticFeedback.lightImpact();
+    drawing.add(point);
+  }
 
-    // Добавляем точку в центре карты
-    drawingPoints.add(centerPosition);
+  void undo() {
+    if (!drawing.canUndo) return;
+    HapticFeedback.selectionClick();
+    drawing.undo();
+  }
 
-    // Также обновляем polylineCoordinates для совместимости с существующей логикой
-    polylineCoordinates.add(centerPosition);
+  void redo() {
+    if (!drawing.canRedo) return;
+    HapticFeedback.selectionClick();
+    drawing.redo();
+  }
 
-    // Рассчитываем расстояние до предыдущей точки
-    if (drawingPoints.length > 1) {
-      final distance = calculateDistance(
-          drawingPoints[drawingPoints.length - 2],
-          drawingPoints[drawingPoints.length - 1]);
-      segmentDistances.add(distance);
-    }
+  void clearDrawing() => drawing.clear();
 
+  void _onPointsChanged() {
+    _revalidate();
     _updateDrawingElements();
     _safeNotifyListeners();
   }
 
-  void _updateDrawingElements() async {
-    // Очищаем все элементы рисования
+  void _revalidate() {
+    issues = PolygonValidator.validate(
+      points: drawing.points,
+      neighbours: [
+        for (final p in userPlantations)
+          if (p.coordinates.length >= 3)
+            NeighbourPolygon(p.id,
+                p.coordinates.map((c) => LatLng(c.latitude, c.longitude)).toList()),
+      ],
+      userLocation: currentLocation,
+      isMockedLocation: isMockedLocation,
+      limitKm: _limitKm,
+    );
+  }
+
+  // Карта получает обновление только по изменению точек; линия к прицелу
+  // и пунктир замыкания рисуются оверлеем (PreviewOverlay).
+  void _updateDrawingElements() {
     polylines.clear();
     polygons.clear();
-
-    // Всегда обновляем маркеры, даже если точек нет
     _updatePolygonMarkers();
 
-    // Если есть точки, рисуем линии и полигон
-    if (drawingPoints.isNotEmpty) {
-      // Получаем центр карты для непрерывной линии
-      LatLng? centerPosition;
-      if (mapController != null) {
-        try {
-          final center = await mapController!.getVisibleRegion();
-          final centerLat =
-              (center.northeast.latitude + center.southwest.latitude) / 2;
-          final centerLng =
-              (center.northeast.longitude + center.southwest.longitude) / 2;
-          centerPosition = LatLng(centerLat, centerLng);
-        } catch (e) {
-          debugPrint('Error getting map center: $e');
-        }
-      }
-
-      // Если есть минимум 3 точки, весь уже отмеченный контур рисуется
-      // обводкой полигона (Polygon.strokeColor) — раньше та же линия
-      // ЕЩЁ РАЗ дублировалась отдельным Polyline (width 4) поверх
-      // Polygon.strokeWidth (2), из-за чего сегменты между уже
-      // поставленными точками визуально были толще, чем последний
-      // "прицельный" сегмент до центра карты, который рисуется только
-      // как Polyline. Теперь Polyline — только этот последний сегмент.
-      if (drawingPoints.length >= 3) {
-        polygons.add(
-          Polygon(
-            polygonId: const PolygonId('drawing_polygon'),
-            points: List<LatLng>.from(drawingPoints),
-            fillColor: design_colors.AppColors.info.withValues(alpha: 0.3),
-            strokeColor: design_colors.AppColors.info,
-            strokeWidth: 4,
-          ),
-        );
-      }
-
-      // Линия-прицел от последней поставленной точки до центра карты —
-      // показывает, куда встанет следующая точка.
-      if (centerPosition != null && drawingPoints.isNotEmpty) {
-        polylines.add(Polyline(
-          polylineId: const PolylineId("drawing_polyline"),
-          points: [drawingPoints.last, centerPosition],
-          color: design_colors.AppColors.info,
-          width: 4,
-          patterns: [], // Сплошная линия
-        ));
-      }
-
-      // Меньше 3 точек — полигон ещё не сформирован, просто рисуем
-      // цепочку уже поставленных точек одной линией.
-      if (drawingPoints.length >= 2 && drawingPoints.length < 3) {
-        polylines.add(Polyline(
-          polylineId: const PolylineId("drawing_polyline_chain"),
-          points: List<LatLng>.from(drawingPoints),
-          color: design_colors.AppColors.info,
-          width: 4,
-          patterns: [],
-        ));
-      }
+    final pts = drawing.points;
+    final color = hasGeometryError
+        ? design_colors.AppColors.error
+        : design_colors.AppColors.info;
+    if (pts.length >= 3) {
+      polygons.add(
+        Polygon(
+          polygonId: const PolygonId('drawing_polygon'),
+          points: List<LatLng>.from(pts),
+          fillColor: color.withValues(alpha: 0.3),
+          strokeColor: color,
+          strokeWidth: 4,
+        ),
+      );
+    } else if (pts.length == 2) {
+      polylines.add(Polyline(
+        polylineId: const PolylineId("drawing_polyline_chain"),
+        points: List<LatLng>.from(pts),
+        color: color,
+        width: 4,
+      ));
     }
   }
 
   // Новый метод для обновления маркеров точек полигона с поддержкой drag
   void _updatePolygonMarkers() {
-    debugPrint(
-        '_updatePolygonMarkers called: drawingPoints.length = ${drawingPoints.length}, isDrawingMode = $isDrawingMode');
 
     // Удаляем только маркеры точек рисования пользователя, оставляем маркер локации
     markers.removeWhere((marker) =>
@@ -782,6 +726,7 @@ class CreateMapPageVm extends ChangeNotifier {
     // Google-капли, согласована по цвету с info-синей линией/полигоном
     // рисования. Пока номер ещё не в кэше — временный fallback-маркер,
     // подменяется на кастомный асинхронно без блокировки текущего кадра.
+    final drawingPoints = drawing.points;
     for (int i = 0; i < drawingPoints.length; i++) {
       final point = drawingPoints[i];
       final number = i + 1;
@@ -799,7 +744,7 @@ class CreateMapPageVm extends ChangeNotifier {
           infoWindow: InfoWindow(
             title: 'Нуқта $number',
             snippet: i > 0
-                ? '${segmentDistances[i - 1].toStringAsFixed(2)} м'
+                ? '${calculateDistance(drawingPoints[i - 1], point).toStringAsFixed(2)} м'
                 : null,
           ),
         ),
@@ -808,12 +753,6 @@ class CreateMapPageVm extends ChangeNotifier {
       if (cachedIcon == null) {
         _loadVertexIcon(number);
       }
-    }
-
-    // Добавляем белую круглую линейку в центре карты если в режиме рисования
-    if (isDrawingMode && rulerIcon != null) {
-      // Линейка будет отображаться через виджет, а не через маркер
-      // Это обеспечит её фиксацию в центре экрана
     }
 
     debugPrint('Total markers: ${markers.length}');
@@ -839,63 +778,13 @@ class CreateMapPageVm extends ChangeNotifier {
     }
   }
 
-  // Обработчик перемещения точки рисования
-  void _onDrawingPointDragged(int index, LatLng newPosition) {
-    if (index < 0 || index >= drawingPoints.length) return;
-    drawingPoints[index] = newPosition;
-
-    // Также обновляем polylineCoordinates для совместимости
-    if (index < polylineCoordinates.length) {
-      polylineCoordinates[index] = newPosition;
-    }
-
-    // Пересчитываем расстояния
-    if (index > 0) {
-      segmentDistances[index - 1] =
-          calculateDistance(drawingPoints[index - 1], drawingPoints[index]);
-    }
-    if (index < drawingPoints.length - 1) {
-      segmentDistances[index] =
-          calculateDistance(drawingPoints[index], drawingPoints[index + 1]);
-    }
-
-    _updateDrawingElements();
-    _safeNotifyListeners();
-  }
-
-  void removeLastPoint() {
-    if (drawingPoints.isNotEmpty) {
-      HapticFeedback.selectionClick();
-      drawingPoints.removeLast();
-      // Также удаляем из polylineCoordinates для совместимости
-      if (polylineCoordinates.isNotEmpty) {
-        polylineCoordinates.removeLast();
-      }
-      if (segmentDistances.isNotEmpty) {
-        segmentDistances.removeLast();
-      }
-      _updateDrawingElements();
-      _safeNotifyListeners();
-    }
-  }
-
-  void removeAllPoint() {
-    clearDrawing();
-  }
-
-  void clearDrawing() {
-    drawingPoints.clear();
-    polylineCoordinates.clear(); // Также очищаем polylineCoordinates
-    segmentDistances.clear();
-    isPolygonComplete = false;
-    _updateDrawingElements();
-    _safeNotifyListeners();
-  }
+  void _onDrawingPointDragged(int index, LatLng newPosition) =>
+      drawing.moveTo(index, newPosition);
 
   double getPolygonArea() {
-    if (drawingPoints.length < 3) return 0.0;
+    if (drawing.points.length < 3) return 0.0;
     // Конвертируем из квадратных метров в гектары (1 га = 10,000 м²)
-    return calculatePolygonArea(drawingPoints) / 10000.0;
+    return calculatePolygonArea(drawing.points) / 10000.0;
   }
 
   Future<void> requestLocationPermission() async {
@@ -930,132 +819,12 @@ class CreateMapPageVm extends ChangeNotifier {
     return coordinates;
   }
 
-  // Проверка пересечения двух полигонов
-  bool doPolygonsIntersect(List<LatLng> polygon1, List<LatLng> polygon2) {
-    // Проверяем, пересекаются ли стороны полигонов
-    for (int i = 0; i < polygon1.length; i++) {
-      int next1 = (i + 1) % polygon1.length;
-      for (int j = 0; j < polygon2.length; j++) {
-        int next2 = (j + 1) % polygon2.length;
-        if (_doSegmentsIntersect(
-            polygon1[i], polygon1[next1], polygon2[j], polygon2[next2])) {
-          return true;
-        }
-      }
-    }
-
-    // Проверяем, находится ли один полигон внутри другого
-    if (polygon1.isNotEmpty && polygon2.isNotEmpty) {
-      if (_isPointInPolygon(polygon1[0], polygon2)) {
-        return true;
-      }
-      if (_isPointInPolygon(polygon2[0], polygon1)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  // Проверка пересечения двух отрезков
-  bool _doSegmentsIntersect(LatLng p1, LatLng p2, LatLng p3, LatLng p4) {
-    double d1 = _direction(p3, p4, p1);
-    double d2 = _direction(p3, p4, p2);
-    double d3 = _direction(p1, p2, p3);
-    double d4 = _direction(p1, p2, p4);
-
-    if (((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) &&
-        ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))) {
-      return true;
-    }
-
-    if (d1 == 0 && _onSegment(p3, p4, p1)) return true;
-    if (d2 == 0 && _onSegment(p3, p4, p2)) return true;
-    if (d3 == 0 && _onSegment(p1, p2, p3)) return true;
-    if (d4 == 0 && _onSegment(p1, p2, p4)) return true;
-
-    return false;
-  }
-
-  // Вычисление направления для проверки пересечения
-  double _direction(LatLng p1, LatLng p2, LatLng p3) {
-    return (p3.longitude - p1.longitude) * (p2.latitude - p1.latitude) -
-        (p2.longitude - p1.longitude) * (p3.latitude - p1.latitude);
-  }
-
-  // Проверка, находится ли точка на отрезке
-  bool _onSegment(LatLng p1, LatLng p2, LatLng p) {
-    return p.latitude <= max(p1.latitude, p2.latitude) &&
-        p.latitude >= min(p1.latitude, p2.latitude) &&
-        p.longitude <= max(p1.longitude, p2.longitude) &&
-        p.longitude >= min(p1.longitude, p2.longitude);
-  }
-
-  // Проверка пересечения нового полигона с существующими плантациями
-  bool checkPolygonOverlap() {
-    if (drawingPoints.length < 3) {
-      return false;
-    }
-
-    // Проверяем пересечение с каждой существующей плантацией
-    for (final plantation in userPlantations) {
-      if (plantation.coordinates.isEmpty || plantation.coordinates.length < 3) {
-        continue;
-      }
-
-      // Конвертируем координаты плантации в LatLng
-      List<LatLng> plantationCoords = plantation.coordinates
-          .map((coord) => LatLng(coord.latitude, coord.longitude))
-          .toList();
-
-      // Проверяем пересечение
-      if (doPolygonsIntersect(drawingPoints, plantationCoords)) {
-        debugPrint('Overlap detected with plantation ${plantation.id}');
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   /// Загрузить лимит координат из storage
   Future<void> loadLimitKm() async {
     final storedLimitKm = await AppStorage.$readDouble(key: StorageKey.limitKm);
     _limitKm = storedLimitKm ?? 1.0; // Дефолт 1 км если не установлен
     debugPrint('📍 Loaded coordinate limit: $_limitKm km');
-  }
-
-  /// Валидировать координаты с учетом лимита
-  /// Возвращает null если валидно, иначе сообщение об ошибке
-  String? validateCoordinatesWithLimit(
-      List<LatLng> coordinates, LatLng? currentLocation) {
-    if (currentLocation == null) {
-      return "Foydalanuvchi joylashuvi aniqlanmadi";
-    }
-
-    if (isMockedLocation) {
-      return "Aniqlangan joylashuv soxta (mock location). Fake GPS dasturlarini "
-          "o'chiring va qayta urinib ko'ring";
-    }
-
-    if (coordinates.length < 3) {
-      return "Madyon to'gri kiritilmadi";
-    }
-
-    // Проверяем, находится ли пользователь внутри полигона
-    final isInside = _isPointInPolygon(currentLocation, coordinates);
-
-    // Если не внутри, проверяем минимальное расстояние
-    if (!isInside) {
-      final minDistance = findMinimumDistance(coordinates, currentLocation);
-      final limitMeters = _limitKm * 1000; // Конвертируем км в метры
-
-      if (minDistance > limitMeters) {
-        return "Foydalanuvchi kiritilgan maydonning ${_limitKm.toStringAsFixed(_limitKm.truncateToDouble() == _limitKm ? 0 : 1)} km radiusida emas";
-      }
-    }
-
-    return null; // Валидно
+    _revalidate();
   }
 
   Future<void> getCurrentLocation() async {
@@ -1119,6 +888,7 @@ class CreateMapPageVm extends ChangeNotifier {
       // Загружаем иконку пользователя
       await loadUserArrowIcon();
     } finally {
+      _revalidate();
       _setLoading(false);
       _safeNotifyListeners();
     }
@@ -1131,7 +901,15 @@ class CreateMapPageVm extends ChangeNotifier {
     // clusterManagerId. Nothing to wire up beyond marker creation.
   }
 
-  void onClusterCameraMove(CameraPosition position) {
+  /// Каждый кадр движения карты. Обновляет только [crosshair] — без
+  /// notifyListeners, кроме смены видимости соседних полигонов по zoom.
+  void onCameraMove(CameraPosition position) {
+    final snap = _snapIndex?.query(position.target);
+    if (snap != null && crosshair.value?.snapTarget == null) {
+      HapticFeedback.selectionClick();
+    }
+    crosshair.value = Crosshair(position, snap);
+
     if (position.zoom == _currentZoom) return;
     final wasVisible = arePolygonsVisible;
     _currentZoom = position.zoom;

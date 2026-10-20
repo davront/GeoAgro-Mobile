@@ -1,34 +1,32 @@
 import 'package:flutter/material.dart';
 
+import 'package:agro_employee_public/design_system/theme/colors.dart'
+    as design_colors;
+
+/// Прицел в центре карты. При прилипании к соседней границе становится
+/// синим (цвет рисуемого контура), чтобы было видно, что точка встанет
+/// не точно в центр, а на чужую границу.
 class CenterRulerWidget extends StatelessWidget {
-  final bool isDrawingMode;
-  
-  const CenterRulerWidget({
-    super.key,
-    required this.isDrawingMode,
-  });
+  final bool snapped;
+
+  const CenterRulerWidget({super.key, this.snapped = false});
 
   @override
   Widget build(BuildContext context) {
-    // Линейка всегда видна с постоянной прозрачностью
-    return Center(
-      child: Container(
-        width: 30,
-        height: 30,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.white.withValues(alpha: 0.6),
-          border: Border.all(
-            color: Colors.black.withValues(alpha: 0.6),
-            width: 1,
+    final ink = snapped
+        ? design_colors.AppColors.info
+        : Colors.black.withValues(alpha: 0.75);
+    return IgnorePointer(
+      child: Center(
+        child: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white.withValues(alpha: snapped ? 0.9 : 0.7),
+            border: Border.all(color: ink, width: snapped ? 2.5 : 1.5),
           ),
-        ),
-        child: Center(
-          child: Icon(
-            Icons.add,
-            color: Colors.black.withValues(alpha: 0.6),
-            size: 16,
-          ),
+          child: Icon(Icons.add, color: ink, size: 20),
         ),
       ),
     );

@@ -7,11 +7,13 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/routes/app_route_names.dart';
-import '../../../../core/utils/utils.dart';
 import '../../../../core/widgets/custom_app_bar_widget.dart';
 import '../../vm/create_map_page_vm.dart';
 import '../widgets/create_map_page_button_widgets.dart';
 import '../widgets/center_ruler_widget.dart';
+import '../widgets/drawing_metrics_bar.dart';
+import '../../drawing/drawing_controller.dart';
+import '../../drawing/preview_overlay.dart';
 import 'package:agro_employee_public/design_system/tokens/adaptive_colors.dart';
 import 'package:agro_employee_public/design_system/theme/colors.dart'
     as design_colors;
@@ -43,207 +45,222 @@ class _CreateMapPageState extends ConsumerState<CreateMapPage> {
     });
   }
 
+  void _submit(CreateMapPageVm vm) {
+    final currentLocation = vm.currentLocation;
+    // GPS-точка юзера. null если геолокация недоступна —
+    // фейковый центр Узбекистана в историю точек не шлём.
+    final userLocationMap = currentLocation == null
+        ? null
+        : {
+            "latitude": currentLocation.latitude,
+            "longitude": currentLocation.longitude,
+          };
+    log("📤 Passing userLocation: $userLocationMap");
+
+    final model = {
+      "farmerId": widget.farmerId,
+      "coordinates": vm.cordinatesConverter(),
+      "latLon": vm.polylineCoordinates,
+      "polygonArea": vm.polygonAreaHectares,
+      // Передаем текущее местоположение пользователя для user_location
+      "userLocation": userLocationMap,
+      // Момент реальной GPS-фиксации/antifraud-проверки —
+      // не момент финального сабмита формы (тот может
+      // случиться намного позже, особенно офлайн).
+      "collectedAt": DateTime.now().toIso8601String(),
+    };
+    context.push(
+      "/${AppRouteNames.farmers}/${AppRouteNames.googleMaps}/${AppRouteNames.detailPage}",
+      extra: model,
+    );
+  }
+
+  /// Выход с нарисованным контуром — только после подтверждения.
+  Future<void> _confirmExit() async {
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Chizilgan maydon o'chiriladi"),
+        content: const Text("Xaritadan chiqsangiz, qo'yilgan nuqtalar saqlanmaydi."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text("Qolish"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text("Chiqish",
+                style: TextStyle(color: design_colors.AppColors.error)),
+          ),
+        ],
+      ),
+    );
+    if (leave == true && mounted) Navigator.of(context).pop();
+  }
+
+  /// Карта + оверлей превью + прицел — общие для телефона и планшета.
+  List<Widget> _mapLayers(CreateMapPageVm vm) => [
+        GoogleMap(
+          initialCameraPosition: CameraPosition(
+            target: vm.currentLocation ?? vm.uzbLatLng,
+            zoom: 10,
+          ),
+          onMapCreated: vm.onMapCreated,
+          mapType: MapType.satellite,
+          zoomControlsEnabled: false,
+          // Оверлей считает экранные координаты без учёта наклона.
+          tiltGesturesEnabled: false,
+          polylines: vm.polylines,
+          polygons: {
+            ...vm.regionBoundaries,
+            if (vm.arePolygonsVisible) ...vm.nearbyPolygons,
+            ...vm.polygons,
+          },
+          markers: vm.markers,
+          onCameraMove: vm.onCameraMove,
+          onTap: vm.onTap,
+        ),
+        Positioned.fill(
+          child: PreviewOverlay(
+            crosshair: vm.crosshair,
+            points: vm.drawingPoints,
+            color: vm.hasGeometryError
+                ? design_colors.AppColors.error
+                : design_colors.AppColors.info,
+          ),
+        ),
+        ValueListenableBuilder<Crosshair?>(
+          valueListenable: vm.crosshair,
+          builder: (context, c, _) =>
+              CenterRulerWidget(snapped: c?.snapTarget != null),
+        ),
+      ];
+
   @override
   Widget build(BuildContext context) {
     final vm = ref.watch(mapPageVM);
-    return Scaffold(
-      backgroundColor: context.colors.background,
-      appBar: CustomAppBarWidget(
-        title: "Xarita",
-        canPop: true,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: FilledButton.icon(
-              onPressed: () async {
-                if (vm.polylineCoordinates.length < 3) {
-                  Utils.fireTopSnackBar("Madyon to'gri kiritilmadi",
-                      design_colors.AppColors.error, context);
-                } else {
-                  // Валидация координат с учетом limit_km (включает проверку currentLocation)
-                  final validationError = vm.validateCoordinatesWithLimit(
-                      vm.polylineCoordinates, vm.currentLocation);
-                  if (validationError != null) {
-                    Utils.fireTopSnackBar(validationError,
-                        design_colors.AppColors.error, context);
-                  } else if (vm.checkPolygonOverlap()) {
-                    Utils.fireTopSnackBar(
-                        "Plantatsiya boshqa plantatsiyalar ustiga chizilgan. Iltimos, boshqa joy tanlang",
-                        design_colors.AppColors.error,
-                        context);
-                  } else {
-                    final value = vm.cordinatesConverter();
-
-                    // GPS-точка юзера. null если геолокация недоступна —
-                    // фейковый центр Узбекистана в историю точек не шлём.
-                    final currentLocation = vm.currentLocation;
-                    final userLocationMap = currentLocation == null
-                        ? null
-                        : {
-                            "latitude": currentLocation.latitude,
-                            "longitude": currentLocation.longitude,
-                          };
-                    log("📤 Passing userLocation: $userLocationMap");
-
-                    final model = {
-                      "farmerId": widget.farmerId,
-                      "coordinates": value,
-                      "latLon": vm.polylineCoordinates,
-                      "polygonArea": vm.polygonAreaHectares,
-                      // Передаем текущее местоположение пользователя для user_location
-                      "userLocation": userLocationMap,
-                      // Момент реальной GPS-фиксации/antifraud-проверки —
-                      // не момент финального сабмита формы (тот может
-                      // случиться намного позже, особенно офлайн).
-                      "collectedAt": DateTime.now().toIso8601String(),
-                    };
-                    log("📦 Model to pass: userLocation = ${model['userLocation']}");
-                    context.push(
-                      "/${AppRouteNames.farmers}/${AppRouteNames.googleMaps}/${AppRouteNames.detailPage}",
-                      extra: model,
-                    );
-                  }
-                }
-              },
-              icon: const Icon(Icons.arrow_forward_rounded, size: 20),
-              label: const Text("Keyingi"),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
-                  vertical: AppSpacing.md,
+    return PopScope(
+      canPop: vm.drawingPoints.isEmpty,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _confirmExit();
+      },
+      child: Scaffold(
+        backgroundColor: context.colors.background,
+        appBar: CustomAppBarWidget(
+          title: "Xarita",
+          canPop: true,
+          // maybePop, а не context.pop: только он спрашивает PopScope.
+          onBackPressed: () => Navigator.of(context).maybePop(),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: FilledButton.icon(
+                // Причина неактивности видна в плашке над картой.
+                onPressed: vm.canSubmit ? () => _submit(vm) : null,
+                icon: const Icon(Icons.arrow_forward_rounded, size: 20),
+                label: const Text("Keyingi"),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: AppSpacing.md,
+                  ),
+                  backgroundColor: design_colors.AppColors.primary,
+                  foregroundColor: Colors.white,
                 ),
-                backgroundColor: design_colors.AppColors.primary,
-                foregroundColor: Colors.white,
               ),
-            ),
-          )
-        ],
-      ),
-      body: Responsive.shouldShowSidebar(context)
-          ? Row(
-              children: [
-                Expanded(
-                  child: Stack(
-                    children: [
-                      GoogleMap(
-                        initialCameraPosition: CameraPosition(
-                          target: vm.currentLocation ?? vm.uzbLatLng,
-                          zoom: 10,
-                        ),
-                        onMapCreated: vm.onMapCreated,
-                        mapType: MapType.satellite,
-                        zoomControlsEnabled: false,
-                        polylines: vm.polylines,
-                        polygons: {
-                          ...vm.regionBoundaries,
-                          if (vm.arePolygonsVisible) ...vm.nearbyPolygons,
-                          ...vm.polygons,
-                        },
-                        markers: vm.markers,
-                        onCameraMove: vm.onClusterCameraMove,
-                        onTap: vm.onTap,
-                      ),
-                      CenterRulerWidget(isDrawingMode: vm.isDrawingMode),
-                      if (vm.showPlantationDialog &&
-                          vm.selectedPlantation != null)
-                        _buildPlantationDialog(context, vm),
-                    ],
-                  ),
-                ),
-                const VerticalDivider(width: 1),
-                _buildSidePanel(context, vm),
-              ],
             )
-          : Stack(
-              children: [
-                GoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target: vm.currentLocation ?? vm.uzbLatLng,
-                    zoom: 10,
+          ],
+        ),
+        body: Responsive.shouldShowSidebar(context)
+            ? Row(
+                children: [
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        ..._mapLayers(vm),
+                        if (vm.showPlantationDialog &&
+                            vm.selectedPlantation != null)
+                          _buildPlantationDialog(context, vm),
+                      ],
+                    ),
                   ),
-                  onMapCreated: vm.onMapCreated,
-                  mapType: MapType.satellite,
-                  zoomControlsEnabled: false,
-                  polylines: vm.polylines,
-                  polygons: {
-                    ...vm.regionBoundaries,
-                    if (vm.arePolygonsVisible) ...vm.nearbyPolygons,
-                    ...vm.polygons,
-                  },
-                  markers: vm.markers,
-                  onCameraMove: vm.onClusterCameraMove,
-                  onTap: vm.onTap,
-                ),
+                  const VerticalDivider(width: 1),
+                  _buildSidePanel(context, vm),
+                ],
+              )
+            : Stack(
+                children: [
+                  ..._mapLayers(vm),
 
-                // Legend for plantation statuses - moved to bottom left
-                Positioned(
-                  bottom: 100,
-                  left: 16,
-                  child: _buildLegendCard(context),
-                ),
-
-                // Простое отображение площади в левом верхнем углу
-                if (vm.drawingPoints.isNotEmpty && vm.drawingPoints.length >= 3)
                   Positioned(
-                    top: 16,
-                    left: 16,
-                    child: _buildAreaCard(context, vm),
-                  ),
-
-                // Индикатор загрузки плантаций
-                if (vm.isLoadingNearby)
-                  Positioned(
-                    top: 16,
-                    right: 16,
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: context.colors.surface.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.blue),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Plantatsiyalar yuklanmoqda...',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: context.colors.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
+                    top: 12,
+                    left: 12,
+                    right: 12,
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: DrawingMetricsBar(vm: vm),
                     ),
                   ),
 
-                // Белая круглая линейка в центре экрана (всегда видна)
-                CenterRulerWidget(isDrawingMode: vm.isDrawingMode),
+                  // Legend for plantation statuses - moved to bottom left
+                  Positioned(
+                    bottom: 100,
+                    left: 16,
+                    child: _buildLegendCard(context),
+                  ),
 
-                // Диалог с информацией о плантации
-                if (vm.showPlantationDialog && vm.selectedPlantation != null)
-                  _buildPlantationDialog(context, vm),
-              ],
-            ),
-      floatingActionButton: Responsive.shouldShowSidebar(context)
-          ? null
-          : CreateMapPageButtonWidgets(vm: vm),
+                  // Индикатор загрузки плантаций
+                  if (vm.isLoadingNearby)
+                    Positioned(
+                      top: 84,
+                      right: 16,
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: context.colors.surface.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.blue),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Plantatsiyalar yuklanmoqda...',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: context.colors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                  // Диалог с информацией о плантации
+                  if (vm.showPlantationDialog && vm.selectedPlantation != null)
+                    _buildPlantationDialog(context, vm),
+                ],
+              ),
+        floatingActionButton: Responsive.shouldShowSidebar(context)
+            ? null
+            : CreateMapPageButtonWidgets(vm: vm),
+      ),
     );
   }
 
@@ -281,31 +298,6 @@ class _CreateMapPageState extends ConsumerState<CreateMapPage> {
     );
   }
 
-  Widget _buildAreaCard(BuildContext context, CreateMapPageVm vm) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: context.colors.surface.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Text(
-        '${vm.getPolygonArea().toStringAsFixed(2)} га',
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: context.colors.textPrimary,
-        ),
-      ),
-    );
-  }
-
   Widget _buildSidePanel(BuildContext context, CreateMapPageVm vm) {
     return Container(
       width: 300,
@@ -324,12 +316,9 @@ class _CreateMapPageState extends ConsumerState<CreateMapPage> {
               ),
             ),
             const SizedBox(height: 16),
+            DrawingMetricsBar(vm: vm),
+            const SizedBox(height: 16),
             _buildLegendCard(context),
-            if (vm.drawingPoints.isNotEmpty &&
-                vm.drawingPoints.length >= 3) ...[
-              const SizedBox(height: 16),
-              _buildAreaCard(context, vm),
-            ],
             if (vm.isLoadingNearby) ...[
               const SizedBox(height: 16),
               Row(
