@@ -34,6 +34,13 @@ class FarmersStatisticsVm extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
   List<FarmerData>? statistics;
+
+  /// Сколько всего фермеров по фильтру (`count` с сервера). Список
+  /// приходит страницами по 20, поэтому `statistics.length` — только
+  /// загруженная часть.
+  int? totalCount;
+  bool hasMore = false;
+  bool isLoadingMore = false;
   int? districtId;
   int? regionId;
   int? _defaultDistrictId;
@@ -183,17 +190,12 @@ class FarmersStatisticsVm extends ChangeNotifier {
       } else {
         debugPrint("✅ FarmersStatisticsVM: Statistics data received");
         try {
-          final jsonData = jsonDecode(data);
-          if (jsonData is Map<String, dynamic> && jsonData['results'] != null) {
-            final resultsJson = jsonEncode(jsonData['results']);
-            statistics = farmerStatisticsModelFromJson(resultsJson);
-            debugPrint(
-                "✅ FarmersStatisticsVM: Parsed ${statistics?.length ?? 0} farmers");
-          } else {
-            statistics = farmerStatisticsModelFromJson(data);
-            debugPrint(
-                "✅ FarmersStatisticsVM: Parsed ${statistics?.length ?? 0} farmers (direct)");
-          }
+          final page = _parsePage(data);
+          statistics = page.items;
+          totalCount = page.count;
+          hasMore = page.hasMore;
+          debugPrint(
+              "✅ FarmersStatisticsVM: Parsed ${statistics?.length ?? 0} of $totalCount farmers");
         } catch (jsonError) {
           debugPrint("❌ FarmersStatisticsVM: JSON Parsing Error: $jsonError");
           debugPrint("Raw data: $data");
@@ -214,6 +216,60 @@ class FarmersStatisticsVm extends ChangeNotifier {
         debugPrint("📊 FarmersStatisticsVM: fetchStatistics completed");
       }
     }
+  }
+
+  /// Подгружает следующую страницу списка (вызывается при прокрутке к
+  /// концу). Ошибка не сбрасывает уже загруженное — следующий скролл
+  /// попробует снова.
+  Future<void> loadMore() async {
+    final loaded = statistics;
+    if (_isDisposed ||
+        !hasMore ||
+        isLoadingMore ||
+        isLoading ||
+        loaded == null) {
+      return;
+    }
+    isLoadingMore = true;
+    _safeNotifyListeners();
+    try {
+      final data = await _appRepositoryImpl.getFarmersStatistics(
+        districtId: districtId,
+        regionId: regionId,
+        status: selectedStatus.param,
+        offset: loaded.length,
+      );
+      if (_isDisposed || data == null) return;
+      // Фильтр сменился, пока шёл запрос, — страница от старой выборки.
+      if (!identical(loaded, statistics)) return;
+      final page = _parsePage(data);
+      statistics = [...loaded, ...page.items];
+      totalCount = page.count ?? totalCount;
+      hasMore = page.hasMore;
+    } catch (e) {
+      debugPrint("❌ FarmersStatisticsVM: loadMore failed: $e");
+    } finally {
+      if (!_isDisposed) {
+        isLoadingMore = false;
+        _safeNotifyListeners();
+      }
+    }
+  }
+
+  /// `{count, next, results}` после GA-16; голый массив — старый бэк.
+  static ({List<FarmerData> items, int? count, bool hasMore}) _parsePage(
+      String data) {
+    final json = jsonDecode(data);
+    if (json is Map<String, dynamic> && json['results'] != null) {
+      final items = farmerStatisticsModelFromJson(jsonEncode(json['results']));
+      return (
+        items: items,
+        count: json['count'] as int?,
+        hasMore: json['next'] != null,
+      );
+    }
+    final items = farmerStatisticsModelFromJson(data);
+    return (items: items, count: items.length, hasMore: false);
   }
 
   /// Загружает разбивку по районам региона и оставляет только строку

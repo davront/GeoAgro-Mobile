@@ -119,43 +119,57 @@ class _BodyContent extends StatelessWidget {
 
     final statistics = vm.statistics;
 
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: EdgeInsets.symmetric(
-        horizontal: AppSpacing.screenPadding,
-        vertical: AppSpacing.lg,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _SearchSection(),
-          SizedBox(height: AppSpacing.lg),
-          const _StatisticsFiltersSection(),
-          SizedBox(height: AppSpacing.lg),
-          if (vm.searchResults != null) ...[
-            _SearchResultsList(vm: vm),
-          ] else if (statistics == null || statistics.isEmpty) ...[
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.4,
-              child: const EmptyStateWidget(
-                subMessage: "Ma'lumotlarni yangilash uchun pastga torting",
+    // Список приходит страницами — догружаем, когда до конца осталось
+    // меньше ~экрана.
+    return NotificationListener<ScrollNotification>(
+      onNotification: (n) {
+        if (n.metrics.extentAfter < 600) vm.loadMore();
+        return false;
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.screenPadding,
+          vertical: AppSpacing.lg,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _SearchSection(),
+            SizedBox(height: AppSpacing.lg),
+            const _StatisticsFiltersSection(),
+            SizedBox(height: AppSpacing.lg),
+            if (vm.searchResults != null) ...[
+              _SearchResultsList(vm: vm),
+            ] else if (statistics == null || statistics.isEmpty) ...[
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.4,
+                child: const EmptyStateWidget(
+                  subMessage: "Ma'lumotlarni yangilash uchun pastga torting",
+                ),
               ),
-            ),
-          ] else ...[
-            _OverviewHeader(statistics: statistics),
-            if (vm.myDistrictStat != null || vm.isLoadingDistrictStat) ...[
+            ] else ...[
+              _OverviewHeader(
+                  statistics: statistics, totalFarmers: vm.totalCount),
+              if (vm.myDistrictStat != null || vm.isLoadingDistrictStat) ...[
+                SizedBox(height: AppSpacing.sectionSpacing),
+                _MyDistrictSection(
+                  stat: vm.myDistrictStat,
+                  isLoading: vm.isLoadingDistrictStat,
+                ),
+              ],
               SizedBox(height: AppSpacing.sectionSpacing),
-              _MyDistrictSection(
-                stat: vm.myDistrictStat,
-                isLoading: vm.isLoadingDistrictStat,
-              ),
+              _SummaryGrid(statistics: statistics),
+              SizedBox(height: AppSpacing.sectionSpacing),
+              _FarmersList(statistics: statistics),
+              if (vm.isLoadingMore)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
             ],
-            SizedBox(height: AppSpacing.sectionSpacing),
-            _SummaryGrid(statistics: statistics),
-            SizedBox(height: AppSpacing.sectionSpacing),
-            _FarmersList(statistics: statistics),
           ],
-        ],
+        ),
       ),
     );
   }
@@ -636,11 +650,14 @@ class _MyDistrictSection extends StatelessWidget {
 class _OverviewHeader extends StatelessWidget {
   final List<FarmerData> statistics;
 
-  const _OverviewHeader({required this.statistics});
+  /// `count` с сервера — все фермеры по фильтру, а не только загруженные.
+  final int? totalFarmers;
+
+  const _OverviewHeader({required this.statistics, this.totalFarmers});
 
   @override
   Widget build(BuildContext context) {
-    final totalFarmers = statistics.length;
+    final totalFarmers = this.totalFarmers ?? statistics.length;
     final totalArea = statistics.fold<double>(
       0.0,
       (sum, farmer) => sum + (farmer.totalArea ?? 0),
