@@ -75,8 +75,21 @@ final class ApiParams {
           {required String phone, required String code}) =>
       <String, dynamic>{"phone": phone, "code": code};
 
+  /// Размер страницы списков. Должен совпадать у page_size и limit,
+  /// иначе page и offset укажут на разные записи.
+  static const int pageSize = 20;
+
+  /// Пагинация, понятная бэку и до, и после перехода на offset (GA-4):
+  /// старый бэк читает page/page_size, новый — offset/limit, лишние
+  /// параметры каждый игнорирует. page/page_size убрать, когда версия
+  /// с offset разойдётся у пользователей и бэк перестанет их принимать.
   static Map<String, dynamic> pageParams({required int page}) =>
-      <String, dynamic>{"page": page};
+      <String, dynamic>{
+        "page": page,
+        "page_size": pageSize,
+        "offset": (page - 1) * pageSize,
+        "limit": pageSize,
+      };
 
   static Map<String, dynamic> searchFarmersParam({required int inn}) =>
       <String, dynamic>{"inn": inn};
@@ -87,8 +100,10 @@ final class ApiParams {
     int? districtId,
     int? regionId,
     String? status,
+    int limit = 20,
+    int offset = 0,
   }) {
-    final params = <String, dynamic>{};
+    final params = <String, dynamic>{"limit": limit, "offset": offset};
     if (districtId != null && districtId > 0)
       params["district_id"] = districtId;
     if (regionId != null && regionId > 0) params["region_id"] = regionId;
@@ -125,8 +140,17 @@ final class ApiParams {
     int? executor,
   }) {
     final params = <String, dynamic>{};
-    if (page != null && page > 0) params["page"] = page;
-    if (pageSize != null && pageSize > 0) params["page_size"] = pageSize;
+    if (page != null && page > 0) {
+      params.addAll(pageParams(page: page));
+      if (pageSize != null && pageSize > 0) {
+        params["page_size"] = pageSize;
+        params["limit"] = pageSize;
+        params["offset"] = (page - 1) * pageSize;
+      }
+    } else if (pageSize != null && pageSize > 0) {
+      params["page_size"] = pageSize;
+      params["limit"] = pageSize;
+    }
     if (statuses != null && statuses.isNotEmpty) {
       params["status"] = statuses.join(",");
     }

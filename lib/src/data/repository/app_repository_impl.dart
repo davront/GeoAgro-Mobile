@@ -684,12 +684,14 @@ class AppRepositoryImpl implements AppRepo {
     int? districtId,
     int? regionId,
     String? status,
+    int offset = 0,
   }) async {
     try {
       final params = ApiParams.farmersStatisticsParams(
         districtId: districtId,
         regionId: regionId,
         status: status,
+        offset: offset,
       );
       final data = await ApiService.get(ApiConst.apiFarmersStatistics, params);
       return data;
