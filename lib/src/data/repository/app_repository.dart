@@ -59,6 +59,7 @@ abstract class AppRepo {
     int? districtId,
     int? regionId,
     String? status,
+    int offset = 0,
   });
 
   Future<String?> getRegionDistrictsStatistics(int regionId);
