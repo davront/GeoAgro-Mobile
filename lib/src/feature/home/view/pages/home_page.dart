@@ -70,8 +70,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       // Polling уведомлений отключён — раздувал app_in_foreground метрику,
       // раз FCM push всё равно не работает. Счётчик/список обновляются
       // вручную при открытии страницы уведомлений (loadUnreadCount).
-      _checkAppVersion(); // Было только в HomeDrawer — срабатывало лишь
-      // при открытии боковой панели, не на главном экране.
     });
   }
 
@@ -136,6 +134,10 @@ class _HomePageState extends ConsumerState<HomePage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _notificationsVmRef ??= ref.read(notificationsVM);
+    // Remote Config часто догружается уже после открытия главной: maybeOf в
+    // _checkAppVersion подписывает на RemoteController, и каждое его
+    // обновление снова приходит сюда — проверяем версию ещё раз.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkAppVersion());
   }
 
   @override
