@@ -21,13 +21,9 @@ final class ApiConst {
   static const String apiLogin = "/api/login/";
   static const String apiRefresh = "/api/refresh/";
   static const String apiPlantations = "/api/plantations/";
-  static const String apiPlantationsForme = "/api/plantations/forme/";
+  // Карта пока остаётся на /forme/: в compact замены для неё нет.
   static const String apiPlantationsFormeMap = "/api/plantations/forme/map/";
-  static const String apiPlantationsFormeRejected =
-      "/api/plantations/forme/rejected/";
-  static const String apiPlantationsFormeApproved =
-      "/api/plantations/forme/approved/";
-  static const String apiPlantationsPending = "/api/plantations/forme/pending/";
+
   static const String apiCreatePlantation = "/api/plantations/create/";
   static const String apiGetUserInfo = "/api/users/profile/";
   static const String apiGetDistrcts = "/api/common/districts/";
@@ -116,18 +112,27 @@ final class ApiParams {
     return params;
   }
 
+  // Поиск бэк тоже отдаёт страницами по 20 (count/next), поэтому page
+  // шлём всегда — иначе видна только первая страница результатов.
   static Map<String, dynamic> pageWithSearchParams(
-      {required int page, String? search}) {
-    // If search query is provided, DO NOT send page param
-    // Backend will return all matches or handle pagination internally for search
-    final params = <String, dynamic>{};
-    if (search != null && search.isNotEmpty) {
-      params["search"] = search;
-    } else {
-      params["page"] = page;
-    }
-    return params;
-  }
+          {required int page, String? search}) =>
+      <String, dynamic>{
+        ...pageParams(page: page),
+        if (search != null && search.isNotEmpty) "search": search,
+      };
+
+  /// Списки «мои плантации» с [ApiConst.apiPlantations];
+  /// status: null (все) | pending | approved | rejected.
+  static Map<String, dynamic> plantationsListParams({
+    String? status,
+    required int page,
+    String? search,
+  }) =>
+      <String, dynamic>{
+        ...pageWithSearchParams(page: page, search: search),
+        "view": "compact",
+        if (status != null) "status": status,
+      };
 
   static Map<String, dynamic> queryParams(Map<String, String> params) =>
       Map<String, dynamic>.from(params);

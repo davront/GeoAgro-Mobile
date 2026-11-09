@@ -29,7 +29,6 @@ class HomePageVm extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isFetchingMore => _isFetchingMore;
   bool get isDeleting => _isDeleting;
-  bool get isSearching => (_searchQuery?.isNotEmpty ?? false);
 
   List<Result> get recheckPlantations => plantationsList
       .where((e) =>

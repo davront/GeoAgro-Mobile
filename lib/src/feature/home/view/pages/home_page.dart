@@ -515,10 +515,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                       padding:
                           REdgeInsets.symmetric(horizontal: 16, vertical: 20),
                       itemCount: vm.plantationsList.length +
-                          ((vm.canLoadNext && !vm.isSearching) ? 1 : 0),
+                          (vm.canLoadNext ? 1 : 0),
                       itemBuilder: (context, index) {
-                        if (index == vm.plantationsList.length &&
-                            !vm.isSearching) {
+                        if (index == vm.plantationsList.length) {
                           return _buildLoadMoreButton(vm);
                         }
                         final plantation = vm.plantationsList[index];
@@ -563,7 +562,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                               );
                             },
                           ),
-                          if (vm.canLoadNext && !vm.isSearching)
+                          if (vm.canLoadNext)
                             _buildLoadMoreButton(vm),
                         ],
                       ),

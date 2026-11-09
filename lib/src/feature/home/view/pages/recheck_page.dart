@@ -38,7 +38,6 @@ class _RejectedVm extends ChangeNotifier {
   bool isFetchingMore = false;
   final List<Result> list = [];
   String? _searchQuery;
-  bool get isSearching => (_searchQuery?.isNotEmpty ?? false);
 
   _RejectedVm() {
     fetch();
@@ -46,7 +45,6 @@ class _RejectedVm extends ChangeNotifier {
 
   Future<void> fetch({bool isLoadMore = false, String? search}) async {
     if ((!canLoadNext && isLoadMore) || (isLoadMore && isFetchingMore)) return;
-    if (isLoadMore && (_searchQuery?.isNotEmpty ?? false)) return;
 
     if (search != _searchQuery && !isLoadMore) {
       _searchQuery = search;
@@ -64,10 +62,9 @@ class _RejectedVm extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final query = ApiParams.pageWithSearchParams(
-          page: currentPage, search: _searchQuery);
-      final data =
-          await ApiService.get(ApiConst.apiPlantationsFormeRejected, query);
+      final query = ApiParams.plantationsListParams(
+          status: "rejected", page: currentPage, search: _searchQuery);
+      final data = await ApiService.get(ApiConst.apiPlantations, query);
       if (data == null) {
         errorMessage = AppRepositoryImpl.lastErrorMessage ??
             "Server bilan bog'liq xatolik yuzaga keldi.";
@@ -222,7 +219,7 @@ class _RecheckPageState extends ConsumerState<RecheckPage> {
             : PlantationListOrGridWidget(
                 items: vm.list,
                 controller: _scrollController,
-                canLoadNext: vm.canLoadNext && !vm.isSearching,
+                canLoadNext: vm.canLoadNext,
                 isFetchingMore: vm.isFetchingMore,
                 onLoadMore: () => vm.fetch(isLoadMore: true),
                 itemBuilder: (plantation) => InkWell(

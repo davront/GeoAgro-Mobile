@@ -19,6 +19,27 @@ void main() {
     expect(p["limit"], p["page_size"]);
   });
 
+  test('pageWithSearchParams: страница уходит и вместе с поиском', () {
+    expect(ApiParams.pageWithSearchParams(page: 2, search: 'fermer'),
+        {...ApiParams.pageParams(page: 2), "search": "fermer"});
+    expect(ApiParams.pageWithSearchParams(page: 1, search: ''),
+        ApiParams.pageParams(page: 1));
+  });
+
+  test('списки плантаций: view=compact, status — параметром', () {
+    expect(
+        ApiParams.plantationsListParams(
+            status: "rejected", page: 2, search: "x"),
+        {
+          ...ApiParams.pageParams(page: 2),
+          "search": "x",
+          "view": "compact",
+          "status": "rejected",
+        });
+    expect(
+        ApiParams.plantationsListParams(page: 1).containsKey("status"), isFalse);
+  });
+
   test('tasksListParams без page (stats) — без пагинации', () {
     final p = ApiParams.tasksListParams(statuses: ["new"]);
     expect(p.containsKey("offset"), isFalse);
