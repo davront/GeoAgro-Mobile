@@ -101,6 +101,7 @@ final class ApiParams {
     int? districtId,
     int? regionId,
     String? status,
+    int? plantedMonth,
     int limit = 20,
     int offset = 0,
   }) {
@@ -111,6 +112,7 @@ final class ApiParams {
     if (status != null && status.isNotEmpty && status != "all") {
       params["status"] = status;
     }
+    if (plantedMonth != null) params["planted_month"] = plantedMonth;
     return params;
   }
 

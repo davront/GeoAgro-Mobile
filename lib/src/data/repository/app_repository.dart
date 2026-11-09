@@ -59,6 +59,7 @@ abstract class AppRepo {
     int? districtId,
     int? regionId,
     String? status,
+    int? plantedMonth,
     int offset = 0,
   });
 
