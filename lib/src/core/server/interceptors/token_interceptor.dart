@@ -4,6 +4,7 @@ import "package:flutter/material.dart";
 import "package:go_router/go_router.dart";
 import "package:package_info_plus/package_info_plus.dart";
 
+import "../api/api_constants.dart";
 import "../../storage/app_storage.dart";
 import "../../routes/router_config.dart";
 import "../../routes/app_route_names.dart";
@@ -14,6 +15,49 @@ class TokenInterceptor extends Interceptor {
   TokenInterceptor._();
 
   static final TokenInterceptor instance = TokenInterceptor._();
+
+  static const String _retriedKey = 'token_refreshed';
+
+  /// Dio без перехватчиков для /api/refresh/ и повтора запроса —
+  /// иначе их ошибки снова попадут в этот onError.
+  @visibleForTesting
+  final Dio refreshDio = Dio(BaseOptions(
+    baseUrl: ApiConst.baseUrl,
+    connectTimeout: ApiConst.connectionTimeout,
+    receiveTimeout: ApiConst.receiveTimeout,
+  ));
+
+  /// Один refresh на все запросы, получившие 401 одновременно.
+  Future<String?>? _refreshing;
+
+  /// Новый access или null, если refresh нет или бэк его отверг (истёк,
+  /// сменён пароль). Ошибки сети и 5xx пробрасываются как DioException.
+  Future<String?> _refreshAccessToken() async {
+    final refresh = await AppStorage.$read(key: StorageKey.refreshToken);
+    if (refresh == null || refresh.isEmpty) return null;
+    final Response<dynamic> response;
+    try {
+      response = await refreshDio
+          .post<dynamic>(ApiConst.apiRefresh, data: {"refresh": refresh});
+    } on DioException catch (e) {
+      final code = e.response?.statusCode;
+      if (code == 400 || code == 401) return null;
+      rethrow;
+    }
+    final data = response.data;
+    final access = data is Map ? data['access'] : null;
+    if (access is! String || access.isEmpty) return null;
+    await AppStorage.$write(key: StorageKey.accessToken, value: access);
+    // Сейчас бэк возвращает тот же refresh; если включат ротацию —
+    // сохраняем новый, иначе следующий refresh уйдёт со старым.
+    final newRefresh = data['refresh'];
+    if (newRefresh is String && newRefresh.isNotEmpty) {
+      await AppStorage.$write(key: StorageKey.refreshToken, value: newRefresh);
+    }
+    accessToken = access;
+    log("Access token refreshed");
+    return access;
+  }
 
   @override
   Future<void> onRequest(
@@ -83,6 +127,38 @@ class TokenInterceptor extends Interceptor {
         path.contains('/api/device-tokens')) {
       super.onError(err, handler);
       return;
+    }
+
+    // Access живёт 24 ч, refresh — 7 дней. На 401 сначала пробуем получить
+    // новый access и повторить запрос; разлогиниваем, только если бэк
+    // отверг refresh или повтор снова получил 401 (флаг _retriedKey).
+    if (err.response?.statusCode == 401 &&
+        err.requestOptions.extra[_retriedKey] != true) {
+      final String? access;
+      try {
+        access = await (_refreshing ??=
+            _refreshAccessToken().whenComplete(() => _refreshing = null));
+      } on DioException {
+        // Нет сети или бэк упал на /api/refresh/ — сессия может быть
+        // жива, не стираем данные (в т.ч. офлайн-очередь).
+        handler.next(err);
+        return;
+      }
+      if (access != null) {
+        final options = err.requestOptions
+          ..headers['Authorization'] = 'Bearer $access'
+          ..extra[_retriedKey] = true;
+        // FormData одноразовая — повторно отправить можно только копию.
+        if (options.data is FormData) {
+          options.data = (options.data as FormData).clone();
+        }
+        try {
+          handler.resolve(await refreshDio.fetch(options));
+        } on DioException catch (e) {
+          await onError(e, handler);
+        }
+        return;
+      }
     }
 
     final responseData = err.response?.data;

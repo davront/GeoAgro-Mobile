@@ -19,6 +19,7 @@ final class ApiConst {
   static String apiPlantationFiles(int id) => '/api/plantations/$id/';
 
   static const String apiLogin = "/api/login/";
+  static const String apiRefresh = "/api/refresh/";
   static const String apiPlantations = "/api/plantations/";
   static const String apiPlantationsForme = "/api/plantations/forme/";
   static const String apiPlantationsFormeMap = "/api/plantations/forme/map/";
