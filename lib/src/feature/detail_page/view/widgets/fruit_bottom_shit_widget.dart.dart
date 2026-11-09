@@ -140,7 +140,7 @@ class FruitBottomShitWidget extends ConsumerWidget {
                 itemLabel: (item) => item.name,
               ),
               SizedBox(height: 10.h),
-              MainText(text: "Ekilgan yilini kiriting:"),
+              MainText(text: "Ekilgan sanasini kiriting:"),
               CreatedTime(
                   selectedDate: detailVm.selectedDate2,
                   setSelectedDate: detailVm.setSelectedDate2),
@@ -300,7 +300,7 @@ class FruitBottomShitWidget extends ConsumerWidget {
                         } else {
                           // Обычная посадка (rootstock опционален)
                           if (detailVm.selectedDate2 == null) {
-                            errorMessage = "Ekilgan yil tanlanmagan.";
+                            errorMessage = "Ekilgan sana tanlanmagan.";
                           } else if (detailVm.cultivatedArea.text.isEmpty ||
                               double.tryParse(detailVm.cultivatedArea.text
                                       .replaceAll(',', '.')) ==

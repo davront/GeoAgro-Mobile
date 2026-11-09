@@ -98,6 +98,7 @@ class FruitArea {
   final String? varietyName; // Название сорта
   final String? rootstockName; // Название подвоя
   final String? plantedYear;
+  final String? plantedDate; // YYYY-MM-DD; год бэк берёт из даты
   final double? area;
   final String? schema;
   final double? weight;
@@ -113,6 +114,7 @@ class FruitArea {
     this.varietyName,
     this.rootstockName,
     this.plantedYear,
+    this.plantedDate,
     this.area,
     this.schema,
     this.weight,
@@ -126,6 +128,7 @@ class FruitArea {
         'variety': variety,
         'rootstock': rootstock,
         'planted_year': plantedYear,
+        'planted_date': plantedDate,
         'area': area,
         'schema': schema,
         'weight': weight,
@@ -143,6 +146,7 @@ class FruitArea {
         other.variety == variety &&
         other.rootstock == rootstock &&
         other.plantedYear == plantedYear &&
+        other.plantedDate == plantedDate &&
         other.area == area &&
         other.schema == schema &&
         other.weight == weight &&
@@ -157,6 +161,7 @@ class FruitArea {
         variety.hashCode ^
         rootstock.hashCode ^
         plantedYear.hashCode ^
+        plantedDate.hashCode ^
         area.hashCode ^
         schema.hashCode ^
         weight.hashCode ^
@@ -323,6 +328,9 @@ class Garden {
         } else {
           // Обычная посадка
           json['fruit_areas[$i][planted_year]'] = fa.plantedYear;
+          if (fa.plantedDate != null) {
+            json['fruit_areas[$i][planted_date]'] = fa.plantedDate;
+          }
           json['fruit_areas[$i][area]'] = fa.area?.toString() ?? '0';
 
           // Опциональные поля

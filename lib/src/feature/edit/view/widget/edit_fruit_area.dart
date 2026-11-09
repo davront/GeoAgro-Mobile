@@ -1,4 +1,6 @@
 import 'package:agro_employee_public/src/data/model/plantation/edit_plantation.dart';
+import 'package:agro_employee_public/src/core/utils/date_utils.dart'
+    show plantedDateLabel;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -74,8 +76,9 @@ class EditFruitArea extends ConsumerWidget {
                                       ),
                                       SizedBox(height: 8),
                                       _buildRow(
-                                        "Ekinlagan yil:",
-                                        detail.plantedYear.toString(),
+                                        "Ekilgan sana:",
+                                        plantedDateLabel(detail.plantedDate,
+                                            detail.plantedYear),
                                       ),
                                       SizedBox(height: 8),
                                       _buildRow(

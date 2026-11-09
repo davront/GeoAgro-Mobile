@@ -1,4 +1,5 @@
 import '../../../../data/model/plantation/new_plantation_model.dart';
+import '../../../../core/utils/date_utils.dart' show plantedDateLabel;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:agro_employee_public/design_system/tokens/adaptive_colors.dart';
@@ -82,8 +83,9 @@ class AddFruitArea extends StatelessWidget {
                                 SizedBox(height: 6.h),
                                 _buildRow(
                                   context,
-                                  "Ekinlagan yil:",
-                                  detail.plantedYear ?? "",
+                                  "Ekilgan sana:",
+                                  plantedDateLabel(detail.plantedDate,
+                                      int.tryParse(detail.plantedYear ?? "")),
                                 ),
                                 SizedBox(height: 6.h),
                                 _buildRow(

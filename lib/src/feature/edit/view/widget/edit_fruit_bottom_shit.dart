@@ -109,7 +109,7 @@ class EditFruitBottomShit extends ConsumerWidget {
                 itemLabel: (item) => item.name,
               ),
               SizedBox(height: 10.h),
-              MainText(text: "Ekilgan yilini kiriting:"),
+              MainText(text: "Ekilgan sanasini kiriting:"),
               CreatedTime(
                 selectedDate: editVM.selectedDate2,
                 setSelectedDate: editVM.setSelectedDate2,
@@ -274,7 +274,7 @@ class EditFruitBottomShit extends ConsumerWidget {
                         } else {
                           // Обычная посадка (rootstock опционален)
                           if (editVM.selectedDate2 == null) {
-                            errorMessage = "Ekilgan yil tanlanmagan.";
+                            errorMessage = "Ekilgan sana tanlanmagan.";
                           } else if (editVM.cultivatedArea.text.isEmpty ||
                               double.tryParse(editVM.cultivatedArea.text
                                       .replaceAll(',', '.')) ==
