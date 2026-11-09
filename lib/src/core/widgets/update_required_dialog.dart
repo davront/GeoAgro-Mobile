@@ -162,18 +162,8 @@ class _UpdateRequiredDialogState extends State<UpdateRequiredDialog> {
             ],
           ],
         ),
+        // Обновления обязательные: без «Keyinroq», закрыть диалог нельзя.
         actions: [
-          if (!_isDownloading)
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                "Keyinroq",
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: context.colors.textTertiary,
-                ),
-              ),
-            ),
           ElevatedButton(
             onPressed: _isDownloading ? null : _downloadAndInstall,
             style: ElevatedButton.styleFrom(
