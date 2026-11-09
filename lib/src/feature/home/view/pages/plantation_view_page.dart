@@ -22,6 +22,7 @@ import '../../../../data/repository/app_repository_impl.dart';
 import 'package:agro_employee_public/src/feature/google_map/vm/plantation_map_view_vm.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/utils/date_utils.dart' show plantedDateLabel;
 import '../pages/home_page.dart';
 import '../widgets/delete_confirmation_dialog.dart';
 import 'package:agro_employee_public/design_system/utils/responsive.dart';
@@ -1181,10 +1182,14 @@ class _PlantationViewPageState extends ConsumerState<PlantationViewPage> {
                             "${_formatNumber(fruit.area)} GA",
                             Icons.square_foot_outlined,
                           ),
-                          if (fruit.plantedYear != null)
+                          // У iqtisodiy samarasiz дата условная (бэк ставит 2023-01-01).
+                          if (fruit.iqtisodiysamarasiz != true &&
+                              (fruit.plantedDate != null ||
+                                  fruit.plantedYear != null))
                             _InfoEntry(
-                              "Ekilgan yil",
-                              fruit.plantedYear.toString(),
+                              "Ekilgan sana",
+                              plantedDateLabel(
+                                  fruit.plantedDate, fruit.plantedYear),
                               Icons.date_range_outlined,
                             ),
                           if (fruit.schema != null && fruit.schema!.isNotEmpty)

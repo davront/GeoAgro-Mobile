@@ -47,6 +47,9 @@ class FarmersStatisticsVm extends ChangeNotifier {
   int? _defaultRegionId;
   PlantationStatus selectedStatus = PlantationStatus.all;
 
+  /// planted_month 1–12; null — все месяцы.
+  int? plantedMonth;
+
   final TextEditingController searchInnController = TextEditingController();
   bool isSearching = false;
   List<FarmerModel>? searchResults;
@@ -73,6 +76,11 @@ class FarmersStatisticsVm extends ChangeNotifier {
 
   void setStatus(PlantationStatus status) {
     selectedStatus = status;
+    fetchStatistics();
+  }
+
+  void setPlantedMonth(int? month) {
+    plantedMonth = month;
     fetchStatistics();
   }
 
@@ -173,6 +181,7 @@ class FarmersStatisticsVm extends ChangeNotifier {
         districtId: districtId,
         regionId: regionId,
         status: selectedStatus.param,
+        plantedMonth: plantedMonth,
       );
 
       if (_isDisposed) {
@@ -237,6 +246,7 @@ class FarmersStatisticsVm extends ChangeNotifier {
         districtId: districtId,
         regionId: regionId,
         status: selectedStatus.param,
+        plantedMonth: plantedMonth,
         offset: loaded.length,
       );
       if (_isDisposed || data == null) return;

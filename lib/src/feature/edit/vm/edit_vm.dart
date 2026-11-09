@@ -19,6 +19,8 @@ import 'package:agro_employee_public/design_system/tokens/adaptive_colors.dart';
 import '../../../data/model/fruits/fruit_model.dart';
 import '../../../data/model/fruits/fruit_rootstocks_model.dart';
 import '../../../data/model/fruits/fruit_verity_modell.dart';
+import '../../../core/utils/date_utils.dart'
+    show plantedDateForApi, plantedDateFromApi;
 import '../../../core/utils/geo_utils.dart';
 import '../../../core/utils/thousands_separator_input_formatter.dart';
 import '../../../core/storage/app_storage.dart';
@@ -2074,9 +2076,7 @@ class EditVM extends ChangeNotifier {
           _plainNumber(fa.economicInefficientArea);
       ref.read(switchFenced.notifier).state = false;
     } else {
-      if (fa.plantedYear != null && fa.plantedYear! > 0) {
-        _selectedDate2 = DateTime(fa.plantedYear!);
-      }
+      _selectedDate2 = plantedDateFromApi(fa.plantedDate, fa.plantedYear);
       cultivatedArea.text = _plainNumber(fa.area);
       tonnaController.text = _plainNumber(fa.weight);
       // Схема приходит как "4X2", "4x2" или "4×2".
@@ -2174,6 +2174,7 @@ class EditVM extends ChangeNotifier {
         varietyName: selectedFruitVariety?.name,
         rootstockName: selectedFruitRoot?.name,
         plantedYear: int.tryParse(year) ?? 0,
+        plantedDate: plantedDateForApi(selectedDate2!),
         area: areaVal,
         schema: "${sxema1.text}X${sxema2.text}",
         weight: tonnaController.text.trim().isEmpty

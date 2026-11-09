@@ -1,5 +1,26 @@
 import 'package:intl/intl.dart';
 
+/// Дата посадки зоны для показа. Старые зоны бэк перенёс с датой 1 января
+/// (известен только год), поэтому 1 января показываем как год. Нет даты
+/// (старые снимки prev_data) — показываем planted_year.
+String plantedDateLabel(String? plantedDate, int? plantedYear) {
+  final date = plantedDate == null ? null : DateTime.tryParse(plantedDate);
+  if (date == null) return plantedYear?.toString() ?? '';
+  if (date.month == 1 && date.day == 1) return date.year.toString();
+  return DateFormat('dd.MM.yyyy').format(date);
+}
+
+/// Дата посадки, выбранная в форме зоны → planted_date (YYYY-MM-DD).
+/// Отдельная функция: класс DateUtils конфликтует с DateUtils из material.
+String plantedDateForApi(DateTime date) => DateUtils.formatDateForAPI(date);
+
+/// planted_date из ответа → дата для формы; без даты — 1 января planted_year.
+DateTime? plantedDateFromApi(String? plantedDate, int? plantedYear) {
+  final date = plantedDate == null ? null : DateTime.tryParse(plantedDate);
+  if (date != null) return date;
+  return plantedYear != null && plantedYear > 0 ? DateTime(plantedYear) : null;
+}
+
 class DateUtils {
   // Format date to display format
   static String formatDate(DateTime date) {

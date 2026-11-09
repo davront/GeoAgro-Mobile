@@ -363,6 +363,7 @@ class FruitArea {
   String? varietyName; // Название сорта
   String? rootstockName; // Название подвоя
   int? plantedYear;
+  String? plantedDate; // YYYY-MM-DD
   double? area;
   String? schema;
   double? weight;
@@ -380,6 +381,7 @@ class FruitArea {
     this.varietyName,
     this.rootstockName,
     this.plantedYear,
+    this.plantedDate,
     this.area,
     this.schema,
     this.weight,
@@ -398,6 +400,7 @@ class FruitArea {
     String? varietyName,
     String? rootstockName,
     int? plantedYear,
+    String? plantedDate,
     double? area,
     String? schema,
     double? weight,
@@ -415,6 +418,7 @@ class FruitArea {
         varietyName: varietyName ?? this.varietyName,
         rootstockName: rootstockName ?? this.rootstockName,
         plantedYear: plantedYear ?? this.plantedYear,
+        plantedDate: plantedDate ?? this.plantedDate,
         area: area ?? this.area,
         schema: schema ?? this.schema,
         weight: weight ?? this.weight,
@@ -476,6 +480,7 @@ class FruitArea {
       varietyName: varietyName,
       rootstockName: rootstockName,
       plantedYear: json["planted_year"],
+      plantedDate: json["planted_date"],
       area: json["area"]?.toDouble(),
       schema: json["schema"],
       weight: json["weight"]?.toDouble(),
@@ -492,6 +497,8 @@ class FruitArea {
         "variety": variety,
         "rootstock": rootstock,
         "planted_year": plantedYear,
+        // Правка заменяет все зоны: без даты бэк сбросит её на 1 января.
+        "planted_date": plantedDate,
         "area": area,
         "schema": schema,
         "weight": weight,

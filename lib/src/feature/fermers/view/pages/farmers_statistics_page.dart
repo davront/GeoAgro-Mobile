@@ -24,6 +24,7 @@ import '../../vm/farmers_statistics_vm.dart';
 import 'package:agro_employee_public/design_system/tokens/adaptive_colors.dart';
 import 'package:agro_employee_public/design_system/utils/responsive.dart';
 import '../../../../../localization/app_strings.dart';
+import '../../../../core/utils/date_utils.dart' as app_date;
 
 final farmersStatisticsVM =
     ChangeNotifierProvider.autoDispose<FarmersStatisticsVm>((ref) {
@@ -333,6 +334,33 @@ class _StatisticsFiltersSection extends ConsumerWidget {
             ],
             onChanged: (value) {
               ref.read(farmersStatisticsVM.notifier).setRegion(value);
+            },
+          ),
+          SizedBox(height: AppSpacing.md),
+          DropdownButtonFormField<int?>(
+            initialValue: vm.plantedMonth,
+            isExpanded: true,
+            decoration: const InputDecoration(
+              labelText: "Ekilgan oyi",
+              border: OutlineInputBorder(),
+            ),
+            items: [
+              const DropdownMenuItem<int?>(
+                value: null,
+                child: Text("Barcha oylar"),
+              ),
+              for (var m = 1; m <= 12; m++)
+                DropdownMenuItem<int?>(
+                  value: m,
+                  // Старые зоны бэк перенёс с датой 1 января, поэтому в
+                  // январь попадают и зоны без указанного месяца.
+                  child: Text(m == 1
+                      ? "Yanvar (oyi ko'rsatilmaganlar ham)"
+                      : app_date.DateUtils.getMonthName(m)),
+                ),
+            ],
+            onChanged: (value) {
+              ref.read(farmersStatisticsVM.notifier).setPlantedMonth(value);
             },
           ),
         ],

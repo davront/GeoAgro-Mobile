@@ -21,6 +21,7 @@ import '../../../core/storage/app_storage.dart';
 import '../../../core/storage/draft_store.dart';
 import '../../../core/storage/upload_queue_store.dart';
 import '../../../core/queue/upload_queue_provider.dart';
+import '../../../core/utils/date_utils.dart' show plantedDateForApi;
 import '../../../core/utils/api_error_parser.dart';
 import '../../../core/utils/network_error_utils.dart';
 import '../../../core/utils/network_utils.dart';
@@ -589,6 +590,7 @@ class DetailVM extends ChangeNotifier {
         variety: detail.variety,
         rootstock: detail.rootstock,
         plantedYear: detail.plantedYear,
+        plantedDate: detail.plantedDate,
         area: detail.area,
         schema: detail.schema,
         weight: detail.weight,
@@ -1107,6 +1109,7 @@ class DetailVM extends ChangeNotifier {
         varietyName: selectedFruitVariety?.name,
         rootstockName: selectedFruitRoot?.name,
         plantedYear: year,
+        plantedDate: plantedDateForApi(selectedDate2!),
         area:
             double.tryParse(cultivatedArea.text.trim().replaceAll(',', '.')) ??
                 0.0,
