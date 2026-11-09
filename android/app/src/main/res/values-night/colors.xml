@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- AppColors.darkBackground — фон экрана входа в тёмной теме. -->
+    <color name="splash_background">#021024</color>
+</resources>

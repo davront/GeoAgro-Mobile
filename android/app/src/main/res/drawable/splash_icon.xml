@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Иконка экрана загрузки Android 12+: система растягивает её до 240dp и
+     обрезает кругом 160dp — inset держит герб внутри круга. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/splash_gerb"
+    android:inset="20%" />
