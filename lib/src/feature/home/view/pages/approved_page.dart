@@ -65,8 +65,7 @@ class _ApprovedVm extends ChangeNotifier {
     try {
       final query = ApiParams.plantationsListParams(
           status: "approved", page: currentPage, search: _searchQuery);
-      final data = await ApiService.get(
-          ApiConst.plantationsList(status: "approved"), query);
+      final data = await ApiService.get(ApiConst.apiPlantations, query);
       if (data == null) {
         errorMessage = AppRepositoryImpl.lastErrorMessage ??
             "Server bilan bog'liq xatolik yuzaga keldi.";

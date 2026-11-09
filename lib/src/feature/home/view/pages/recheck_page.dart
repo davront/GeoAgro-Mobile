@@ -64,8 +64,7 @@ class _RejectedVm extends ChangeNotifier {
     try {
       final query = ApiParams.plantationsListParams(
           status: "rejected", page: currentPage, search: _searchQuery);
-      final data = await ApiService.get(
-          ApiConst.plantationsList(status: "rejected"), query);
+      final data = await ApiService.get(ApiConst.apiPlantations, query);
       if (data == null) {
         errorMessage = AppRepositoryImpl.lastErrorMessage ??
             "Server bilan bog'liq xatolik yuzaga keldi.";

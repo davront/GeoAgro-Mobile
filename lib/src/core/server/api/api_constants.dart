@@ -21,24 +21,8 @@ final class ApiConst {
   static const String apiLogin = "/api/login/";
   static const String apiRefresh = "/api/refresh/";
   static const String apiPlantations = "/api/plantations/";
-  static const String apiPlantationsForme = "/api/plantations/forme/";
+  // Карта пока остаётся на /forme/: в compact замены для неё нет.
   static const String apiPlantationsFormeMap = "/api/plantations/forme/map/";
-
-  /// Переход списков плантаций с /forme/ на /api/plantations/?view=compact.
-  /// Включать только когда бэк начнёт фильтровать /api/plantations/ по
-  /// пользователю и отдаст moderation_comment в compact — иначе сотрудник
-  /// увидит чужие заявки, а на отклонённых пропадёт причина отказа.
-  /// /forme/map/ не затрагивает — замены для карты пока нет.
-  static const bool usePlantationsCompact = false;
-
-  /// Списки «мои плантации»; status: null (все) | pending | approved | rejected.
-  static String plantationsList(
-      {String? status, bool compact = usePlantationsCompact}) {
-    if (compact) return apiPlantations;
-    return status == null
-        ? apiPlantationsForme
-        : "$apiPlantationsForme$status/";
-  }
 
   static const String apiCreatePlantation = "/api/plantations/create/";
   static const String apiGetUserInfo = "/api/users/profile/";
@@ -135,17 +119,17 @@ final class ApiParams {
         if (search != null && search.isNotEmpty) "search": search,
       };
 
-  /// Параметры к [ApiConst.plantationsList] с тем же status.
+  /// Списки «мои плантации» с [ApiConst.apiPlantations];
+  /// status: null (все) | pending | approved | rejected.
   static Map<String, dynamic> plantationsListParams({
     String? status,
     required int page,
     String? search,
-    bool compact = ApiConst.usePlantationsCompact,
   }) =>
       <String, dynamic>{
         ...pageWithSearchParams(page: page, search: search),
-        if (compact) "view": "compact",
-        if (compact && status != null) "status": status,
+        "view": "compact",
+        if (status != null) "status": status,
       };
 
   static Map<String, dynamic> queryParams(Map<String, String> params) =>

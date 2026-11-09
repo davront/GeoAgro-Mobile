@@ -58,7 +58,7 @@ class AppRepositoryImpl implements AppRepo {
     _clearError();
     try {
       return await ApiService.get(
-        ApiConst.plantationsList(),
+        ApiConst.apiPlantations,
         ApiParams.plantationsListParams(page: page ?? 1, search: search),
       );
     } catch (e) {

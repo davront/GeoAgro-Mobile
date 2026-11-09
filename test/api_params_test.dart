@@ -26,29 +26,18 @@ void main() {
         ApiParams.pageParams(page: 1));
   });
 
-  test('списки плантаций: forme по умолчанию, compact — тот же status', () {
-    expect(ApiConst.usePlantationsCompact, isFalse);
-    expect(ApiConst.plantationsList(), "/api/plantations/forme/");
-    expect(ApiConst.plantationsList(status: "rejected"),
-        "/api/plantations/forme/rejected/");
-    expect(
-        ApiParams.plantationsListParams(status: "rejected", page: 1)
-            .containsKey("view"),
-        isFalse);
-
-    expect(ApiConst.plantationsList(status: "rejected", compact: true),
-        "/api/plantations/");
+  test('списки плантаций: view=compact, status — параметром', () {
     expect(
         ApiParams.plantationsListParams(
-            status: "rejected", page: 2, search: "x", compact: true),
+            status: "rejected", page: 2, search: "x"),
         {
           ...ApiParams.pageParams(page: 2),
           "search": "x",
           "view": "compact",
           "status": "rejected",
         });
-    expect(ApiParams.plantationsListParams(page: 1, compact: true)["status"],
-        isNull);
+    expect(
+        ApiParams.plantationsListParams(page: 1).containsKey("status"), isFalse);
   });
 
   test('tasksListParams без page (stats) — без пагинации', () {
