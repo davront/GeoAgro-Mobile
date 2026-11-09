@@ -11,6 +11,11 @@ import 'package:agro_employee_public/design_system/tokens/colors.dart'
     as design_colors;
 
 class UpdateRequiredDialog extends StatefulWidget {
+  /// Диалог сейчас на экране — VersionCheckService не покажет второй.
+  /// Сбрасывается в dispose: диалог убирает навигация (go(login) при
+  /// разлогине), и после входа он должен показаться снова.
+  static bool isOpen = false;
+
   final String currentVersion;
   final String requiredVersion;
   final String downloadUrl;
@@ -30,6 +35,12 @@ class _UpdateRequiredDialogState extends State<UpdateRequiredDialog> {
   bool _isDownloading = false;
   double _progress = 0;
   String? _error;
+
+  @override
+  void dispose() {
+    UpdateRequiredDialog.isOpen = false;
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
