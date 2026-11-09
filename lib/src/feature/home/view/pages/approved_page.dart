@@ -39,7 +39,6 @@ class _ApprovedVm extends ChangeNotifier {
   bool isFetchingMore = false;
   final List<Result> list = [];
   String? _searchQuery;
-  bool get isSearching => (_searchQuery?.isNotEmpty ?? false);
 
   _ApprovedVm() {
     fetch();
@@ -47,10 +46,6 @@ class _ApprovedVm extends ChangeNotifier {
 
   Future<void> fetch({bool isLoadMore = false, String? search}) async {
     if ((!canLoadNext && isLoadMore) || (isLoadMore && isFetchingMore)) return;
-    if (isLoadMore && (_searchQuery?.isNotEmpty ?? false)) {
-      return; // disable pagination while searching
-    }
-
     // If search query changed, reset pagination
     if (search != _searchQuery && !isLoadMore) {
       _searchQuery = search;
@@ -68,10 +63,10 @@ class _ApprovedVm extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final query = ApiParams.pageWithSearchParams(
-          page: currentPage, search: _searchQuery);
-      final data =
-          await ApiService.get(ApiConst.apiPlantationsFormeApproved, query);
+      final query = ApiParams.plantationsListParams(
+          status: "approved", page: currentPage, search: _searchQuery);
+      final data = await ApiService.get(
+          ApiConst.plantationsList(status: "approved"), query);
       if (data == null) {
         errorMessage = AppRepositoryImpl.lastErrorMessage ??
             "Server bilan bog'liq xatolik yuzaga keldi.";
@@ -242,7 +237,7 @@ class _ApprovedPageState extends ConsumerState<ApprovedPage> {
             : PlantationListOrGridWidget(
                 items: vm.list,
                 controller: _controller,
-                canLoadNext: vm.canLoadNext && !vm.isSearching,
+                canLoadNext: vm.canLoadNext,
                 isFetchingMore: vm.isFetchingMore,
                 onLoadMore: () => vm.fetch(isLoadMore: true),
                 itemBuilder: (plantation) => InkWell(
