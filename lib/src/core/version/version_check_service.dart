@@ -4,10 +4,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../widgets/update_required_dialog.dart';
 
 class VersionCheckService {
-  /// Диалог закрыть нельзя, поэтому за жизнь процесса он нужен один раз;
-  /// повторные проверки (каждое обновление Remote Config) не плодят копии.
-  static bool _dialogShown = false;
-
   /// Проверяет версию приложения с версией бэкенда
   static Future<void> checkVersionAndShowUpdateDialog(
     BuildContext context,
@@ -31,8 +27,8 @@ class VersionCheckService {
       debugPrint(
           "📱 Showing update dialog: app version is older than server version");
       // Проверка и установка флага — без await между ними, гонки нет.
-      if (context.mounted && !_dialogShown) {
-        _dialogShown = true;
+      if (context.mounted && !UpdateRequiredDialog.isOpen) {
+        UpdateRequiredDialog.isOpen = true;
         showDialog(
           context: context,
           barrierDismissible: false, // Нельзя закрыть диалог
