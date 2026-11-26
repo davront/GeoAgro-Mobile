@@ -275,6 +275,11 @@ class EditVM extends ChangeNotifier {
   bool isLoading = true;
   bool isLoading2 = false;
   String? errorMessage;
+  // Плантация не загрузилась — только тогда страница меняет форму на экран
+  // ошибки. Ошибки сохранения (GPS, сеть, валидация бэка) идут снекбаром,
+  // иначе форма пропадала, а «Qayta urinib ko'ring» перезагружал плантацию
+  // и стирал всё, что пользователь успел ввести.
+  bool loadFailed = false;
   // Имя поля (ключ бэка), к которому относится последняя ошибка сервера —
   // используется UI для подсветки конкретного инпута и автоскролла к
   // нему. Тот же паттерн, что и DetailVM.erroredField при create.
@@ -600,6 +605,7 @@ class EditVM extends ChangeNotifier {
 
     _isLoadingDetail = true;
     errorMessage = null;
+    loadFailed = false;
     isLoading = true;
     notifyListeners();
     try {
@@ -830,9 +836,11 @@ class EditVM extends ChangeNotifier {
         }
       } else {
         errorMessage = "Ma'lumotni olishda xatolik";
+        loadFailed = true;
       }
     } catch (e) {
       errorMessage = e.toString();
+      loadFailed = true;
     } finally {
       _isLoadingDetail = false;
       isLoading = false;
