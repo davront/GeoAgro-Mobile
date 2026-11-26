@@ -135,7 +135,7 @@ class _EditPageState extends ConsumerState<EditPage>
         ),
       );
     }
-    if (edit.errorMessage != null) {
+    if (edit.loadFailed) {
       return Scaffold(
         backgroundColor: context.colors.background,
         appBar: CustomAppBarWidget(title: "Xatolik !!!", canPop: true),

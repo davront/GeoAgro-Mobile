@@ -566,16 +566,19 @@ class CreateMapPageVm extends ChangeNotifier {
     showPlantationDialog = true;
     final markerId = MarkerId('plantation_info_${plantation.id}');
     if (mapController != null) {
-      mapController!.showMarkerInfoWindow(markerId);
+      // Маркер внутри кластера без MarkerController — нативный «Invalid markerId».
+      mapController!.showMarkerInfoWindow(markerId).catchError((_) {});
     }
     _safeNotifyListeners();
   }
 
   void closePlantationDialog() {
     if (selectedPlantation != null && mapController != null) {
-      mapController!.hideMarkerInfoWindow(
-        MarkerId('plantation_info_${selectedPlantation!.id}'),
-      );
+      mapController!
+          .hideMarkerInfoWindow(
+            MarkerId('plantation_info_${selectedPlantation!.id}'),
+          )
+          .catchError((_) {});
     }
     selectedPlantation = null;
     showPlantationDialog = false;

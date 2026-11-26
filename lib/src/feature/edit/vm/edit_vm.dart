@@ -275,6 +275,11 @@ class EditVM extends ChangeNotifier {
   bool isLoading = true;
   bool isLoading2 = false;
   String? errorMessage;
+  // Плантация не загрузилась — только тогда страница меняет форму на экран
+  // ошибки. Ошибки сохранения (GPS, сеть, валидация бэка) идут снекбаром,
+  // иначе форма пропадала, а «Qayta urinib ko'ring» перезагружал плантацию
+  // и стирал всё, что пользователь успел ввести.
+  bool loadFailed = false;
   // Имя поля (ключ бэка), к которому относится последняя ошибка сервера —
   // используется UI для подсветки конкретного инпута и автоскролла к
   // нему. Тот же паттерн, что и DetailVM.erroredField при create.
@@ -600,6 +605,7 @@ class EditVM extends ChangeNotifier {
 
     _isLoadingDetail = true;
     errorMessage = null;
+    loadFailed = false;
     isLoading = true;
     notifyListeners();
     try {
@@ -830,9 +836,11 @@ class EditVM extends ChangeNotifier {
         }
       } else {
         errorMessage = "Ma'lumotni olishda xatolik";
+        loadFailed = true;
       }
     } catch (e) {
       errorMessage = e.toString();
+      loadFailed = true;
     } finally {
       _isLoadingDetail = false;
       isLoading = false;
@@ -1044,15 +1052,23 @@ class EditVM extends ChangeNotifier {
   /// удалось получить за отведённое время; в этом случае поле не шлём.
   Future<Map<String, double>?> _currentUserLocation() async {
     try {
-      final permission = await Geolocator.checkPermission();
+      // Правка — часто первое, где нужен GPS (особенно после установки
+      // uz.geoagro.mobile: разрешения у нового пакета чистые). Раньше
+      // разрешение здесь только проверялось, не запрашивалось — и
+      // сохранение блокировалось навсегда.
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
       if (permission != LocationPermission.always &&
           permission != LocationPermission.whileInUse) {
         return null;
       }
+      // 5с на холодный GPS-фикс в поле не хватало.
       final pos = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.medium,
-          timeLimit: Duration(seconds: 5),
+          timeLimit: Duration(seconds: 15),
         ),
       );
       // Mock location (Developer Options / fake GPS ilova) — soxta
