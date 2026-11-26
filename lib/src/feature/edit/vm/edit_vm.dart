@@ -1052,15 +1052,23 @@ class EditVM extends ChangeNotifier {
   /// удалось получить за отведённое время; в этом случае поле не шлём.
   Future<Map<String, double>?> _currentUserLocation() async {
     try {
-      final permission = await Geolocator.checkPermission();
+      // Правка — часто первое, где нужен GPS (особенно после установки
+      // uz.geoagro.mobile: разрешения у нового пакета чистые). Раньше
+      // разрешение здесь только проверялось, не запрашивалось — и
+      // сохранение блокировалось навсегда.
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
       if (permission != LocationPermission.always &&
           permission != LocationPermission.whileInUse) {
         return null;
       }
+      // 5с на холодный GPS-фикс в поле не хватало.
       final pos = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.medium,
-          timeLimit: Duration(seconds: 5),
+          timeLimit: Duration(seconds: 15),
         ),
       );
       // Mock location (Developer Options / fake GPS ilova) — soxta
